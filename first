@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You: A Cyber Christmas</title>
+    <style>
+        /* 赛博朋克风格界面定义 */
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
+        
+        /* UI 层 */
+        #ui-layer {
+            position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 10;
+            pointer-events: none; /* 让点击穿透到输入框 */
+        }
+        #input-box {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00f7ff;
+            color: #00f7ff;
+            padding: 10px;
+            border-radius: 20px;
+            outline: none;
+            width: 60%;
+            font-size: 16px;
+            box-shadow: 0 0 10px #00f7ff;
+            transition: all 0.3s;
+        }
+        #input-box:focus { box-shadow: 0 0 20px #00f7ff, inset 0 0 10px #00f7ff; }
+        #send-btn {
+            pointer-events: auto;
+            background: linear-gradient(45deg, #00f7ff, #d400ff);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #d400ff;
+        }
+        #send-btn:active { transform: scale(0.95); }
+
+        /* 顶部提示 */
+        #top-msg {
+            position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.7);
+            z-index: 10; font-size: 14px; text-shadow: 0 0 5px #00f7ff;
+        }
+        /* 音乐按钮 */
+        #music-control {
+            position: absolute; top: 20px; right: 20px; z-index: 20; color: #00f7ff;
+            border: 1px solid #00f7ff; padding: 5px 10px; border-radius: 15px; font-size: 12px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-msg">✨ 输入你的愿望，点亮这棵树 ✨</div>
+    <div id="music-control">🎵 Play Music</div>
+    <div id="canvas-container"></div>
+    
+    <div id="ui-layer">
+        <input type="text" id="input-box" placeholder="许个愿吧..." maxlength="20">
+        <button id="send-btn">发送愿望</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+
+    <script>
+        let scene, camera, renderer, composer;
+        let treeParticles, starPoints;
+        const wishes = []; // 存放许愿球
+
+        init();
+        animate();
+
+        function init() {
+            // 1. 场景搭建
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.001);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 50;
+            camera.position.y = 10;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // 2. 辉光特效后期处理 (让树发光的关键)
+            const renderScene = new THREE.RenderPass(scene, camera);
+            // BloomPass 参数：强度, 半径, 阈值
+            const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
+            // 3. 创建粒子圣诞树
+            createParticleTree();
+            // 4. 创建背景星空
+            createStars();
+            // 5. 创建顶部大星星
+            createTopStar();
+
+            // 灯光
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0x00f7ff, 1, 100);
+            pointLight.position.set(0, 20, 20);
+            scene.add(pointLight);
+
+            // 监听窗口缩放
+            window.addEventListener('resize', onWindowResize);
+
+            // UI 交互监听
+            document.getElementById('send-btn').addEventListener('click', makeWish);
+            // 也可以按回车发送
+            document.getElementById('input-box').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') makeWish();
+            });
+        }
+
+        // --- 核心组件创建函数 ---
+
+        function createParticleTree() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const colors = [];
+            
+            const layers = 80; // 层数
+            const countPerLayer = 30; // 每层粒子数
+            let heightStep = 0.5;
+            let maxWidth = 18;
+
+            for (let i = 0; i < layers; i++) {
+                let y = i * heightStep;
+                let currentRadius = maxWidth * (1 - i / layers); // 越往上越窄
+                
+                for (let j = 0; j < countPerLayer; j++) {
+                    let angle = (j / countPerLayer) * Math.PI * 2 + i * 0.1; // 螺旋偏移
+                    // 加入一些随机扰动，让树看起来更自然
+                    let r = currentRadius + (Math.random() - 0.5) * 1.5;
+                    let x = r * Math.cos(angle);
+                    let z = r * Math.sin(angle);
+                    
+                    vertices.push(x, y - 20, z); // 把树往下放一点
+                    
+                    // 颜色渐变：底部冷色调，顶部暖色调
+                    const color = new THREE.Color();
+                    color.setHSL(0.6 - i/layers * 0.5, 1.0, 0.6);
+                    colors.push(color.r, color.g, color.b);
+                }
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            // 使用点材质，并开启顶点颜色
+            const material = new THREE.PointsMaterial({
+                size: 0.6,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending, // 发光叠加模式
+                transparent: true,
+                opacity: 0.9,
+                map: getTexture() // 获取圆形纹理
+            });
+
+            treeParticles = new THREE.Points(geometry, material);
+            scene.add(treeParticles);
+        }
+
+        function createStars() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 1000; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(200)); // x
+                vertices.push(THREE.MathUtils.randFloatSpread(200)); // y
+                vertices.push(THREE.MathUtils.randFloatSpread(200)); // z
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0x888888, size: 0.3 });
+            starPoints = new THREE.Points(geometry, material);
+            scene.add(starPoints);
+        }
+
+        function createTopStar() {
+            // 简单的顶部大光点
+            const geometry = new THREE.SphereGeometry(1, 16, 16);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
+            const topStar = new THREE.Mesh(geometry, material);
+            topStar.position.set(0, 22, 0);
+            // 给它加一个强光点
+            const light = new THREE.PointLight(0xffdd00, 2, 50);
+            topStar.add(light);
+            scene.add(topStar);
+        }
+
+        // --- 交互逻辑 (伪AI部分) ---
+
+        function makeWish() {
+            const input = document.getElementById('input-box');
+            const text = input.value.trim();
+            if (text === "") return;
+
+            input.value = ""; // 清空输入框
+            document.getElementById('top-msg').innerText = `正在为 "${text}" 注入能量...`;
+
+            // 1. 分析文本情绪 (简单的关键词匹配来改变颜色)
+            let wishColor = 0x00f7ff; // 默认赛博蓝
+            const warmKeywords = ['爱', '喜欢', 'love', '暖', '你', '在一起'];
+            const richKeywords = ['钱', '富', '发财', 'money'];
+            if (warmKeywords.some(k => text.includes(k))) wishColor = 0xff0066; // 粉色
+            else if (richKeywords.some(k => text.includes(k))) wishColor = 0xffd700; // 金色
+
+            // 2. 创建文字纹理
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256; canvas.height = 128;
+            ctx.fillStyle = '#'+wishColor.toString(16);
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 128, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+
+            // 3. 创建许愿球 Sprite (永远面向相机的平面)
+            const material = new THREE.SpriteMaterial({ map: texture, color: 0xffffff });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(8, 4, 1);
+            
+            // 初始位置在屏幕外下方
+            sprite.position.set((Math.random()-0.5)*10, -30, 10 + Math.random()*10);
+            
+            // 目标位置：树上的随机一点
+            const targetY = Math.random() * 30 - 10;
+            const targetRadius = (20 - (targetY+20)/2) * 0.8;
+            const angle = Math.random() * Math.PI * 2;
+            sprite.userData = {
+                targetPos: new THREE.Vector3(targetRadius * Math.cos(angle), targetY, targetRadius * Math.sin(angle)),
+                speed: 0.02 + Math.random()*0.01
+            };
+            
+            scene.add(sprite);
+            wishes.push(sprite); // 加入动画队列
+
+            setTimeout(()=>{
+                 document.getElementById('top-msg').innerText = `✨ 愿望已挂载，能量传输完毕 ✨`;
+            }, 2000);
+        }
+
+
+        // --- 动画循环 ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 树和背景的缓慢旋转
+            treeParticles.rotation.y += 0.002;
+            starPoints.rotation.y -= 0.0005;
+
+            // 摄像机轻微浮动
+            camera.position.y = 10 + Math.sin(Date.now() * 0.001) * 2;
+
+            // 更新所有许愿球的位置
+            wishes.forEach(sprite => {
+                // 向目标位置移动 (简单的线性插值)
+                sprite.position.lerp(sprite.userData.targetPos, sprite.userData.speed);
+                // 让它一直慢慢转动一点，增加动感
+                sprite.material.rotation += 0.01;
+            });
+
+            // 使用组合器渲染（包含辉光特效）
+            composer.render();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 辅助函数：创建一个圆形的纹理，让粒子看起来是圆点而不是方块
+        function getTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32; canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        // 简单的音乐控制
+        let musicPlaying = false;
+        // 这是一个免费的圣诞音乐外链，如果失效你需要替换成自己的 mp3 链接
+        const audio = new Audio('https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=christmas-ident-126633.mp3'); 
+        audio.loop = true;
+        audio.volume = 0.5;
+        document.getElementById('music-control').addEventListener('click', function() {
+            if (!musicPlaying) {
+                audio.play().then(() => {
+                    this.innerText = "🎵 Playing...";
+                    this.style.borderColor = "#d400ff";
+                    this.style.color = "#d400ff";
+                    musicPlaying = true;
+                }).catch(e => { console.log("需要用户交互才能播放音乐"); });
+            } else {
+                audio.pause();
+                this.innerText = "🎵 Play Music";
+                this.style.borderColor = "#00f7ff";
+                this.style.color = "#00f7ff";
+                musicPlaying = false;
+            }
+        });
+    </script>
+</body>
+</html>
