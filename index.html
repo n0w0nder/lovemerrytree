@@ -5,41 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Our Memory DNA Tree</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Microsoft YaHei', sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Microsoft YaHei', sans-serif; cursor: crosshair; }
+        /* 3D容器 */
         #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
-        
+        /* 2D UI粒子层 (新增) */
+        #ui-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; mix-blend-mode: screen; }
+
         /* UI层 */
         #ui-layer { position: absolute; bottom: 30px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
         #wish-btn { 
-            pointer-events: auto; background: linear-gradient(45deg, #ff0066, #ff5e00); 
-            border: none; color: white; padding: 12px 30px; border-radius: 30px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 102, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
+            pointer-events: auto; background: rgba(0,0,0,0.5); 
+            border: 2px solid #ff0066; color: #ff0066; padding: 12px 35px; border-radius: 30px; 
+            font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(255, 0, 102, 0.3);
+            transition: all 0.3s; backdrop-filter: blur(5px);
+            text-transform: uppercase; letter-spacing: 2px;
         }
-        #wish-btn:active { transform: scale(0.95); box-shadow: 0 0 10px rgba(255, 0, 102, 0.8); }
+        #wish-btn:hover { background: #ff0066; color: white; box-shadow: 0 0 30px rgba(255, 0, 102, 0.8); }
+        #wish-btn:active { transform: scale(0.95); }
         
-        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.9); z-index: 10; font-size: 16px; letter-spacing: 2px; text-shadow: 0 0 10px #ff0066; }
-        #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #ff0066; border: 1px solid #ff0066; padding: 5px 15px; border-radius: 15px; font-size: 12px; cursor: pointer; }
+        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.8); z-index: 10; font-size: 14px; letter-spacing: 3px; text-shadow: 0 0 10px #ff0066; text-transform: uppercase; }
+        #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #ff0066; border: 1px solid #ff0066; padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer;background: rgba(0,0,0,0.3); }
         
         /* Loading 遮罩 */
         #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; color: #ff0066; flex-direction: column; transition: opacity 0.8s; }
-        .loader-spinner { border: 4px solid rgba(255, 0, 102, 0.2); border-top: 4px solid #ff0066; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        .loader-spinner { border: 3px solid rgba(255, 0, 102, 0.2); border-top: 3px solid #ff0066; border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 25px; box-shadow: 0 0 20px #ff0066; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 点击提示 */
+        #click-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 8; font-size: 14px; pointer-events: none; animation: fadeOut 4s forwards 2s; }
+        @keyframes fadeOut { to { opacity: 0; } }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="loader-spinner"></div>
-        <div>正在提取 2025.9.12 以来的回忆...</div>
-        <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 10px;">0%</div>
+        <div style="letter-spacing: 2px;">正在接入 2025.9.12 时空档案...</div>
+        <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 15px; font-family: monospace;">LOADING: 0%</div>
     </div>
 
-    <div id="top-msg">✨ Jiabao & Me ✨</div>
+    <div id="top-msg">✨ Jiabao & Me / Since 2025.9.12 ✨</div>
     <div id="music-control">🎵 Music Off</div>
-    <div id="canvas-container"></div>
+    <div id="click-hint">💡 试着点击螺旋上的照片</div>
     
-    <div id="ui-layer">
-        <button id="wish-btn">✨ 点亮我们的专属时刻 ✨</button>
+    <div id="canvas-container"></div>
+    <canvas id="ui-canvas"></canvas> <div id="ui-layer">
+        <button id="wish-btn">⚡ 全局记忆共鸣 ⚡</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -49,35 +59,17 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 
     <script>
         // ================= 配置区域 =================
         const baseText = "Since 2025.9.12"; 
-
-        // 【重要提示】
-        // 1. 普通聊天记录正常命名，如 'chat01.jpg'
-        // 2. 你想特殊互动的合照，文件名请以 'love_' 开头，如 'love_合照1.jpg'
         const chatImages = [
-            'chat01.jpg',
-            'chat02.jpg',
-            'chat04.jpg',
-            'chat05.jpg',
-            'chat07.jpg',
-            'chat08.jpg',
-            'chat09.jpg',
-            'chat10.jpg',
-            'chat11.jpg',
-            'chat12.jpg',
-            'chat13.jpg',
-            'chat14.jpg',
-            'chat15.jpg',
-            'chat16.jpg',
-            'chat17.jpg',
-            'chat18.jpg',
-            'chat19.jpg',
-            'love_1.jpg',
-            'love_2.jpg',
-            'chat20.jpg'
+            'chat01.jpg', 'chat02.jpg', 'chat04.jpg', 'chat05.jpg', 'chat07.jpg',
+            'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
+            'chat13.jpg', 'chat14.jpg', 'chat15.jpg', 'chat16.jpg', 'chat17.jpg',
+            'chat18.jpg', 'chat19.jpg', 'chat20.jpg',
+            'love_1.jpg', 'love_2.jpg' // 你的特殊照片
         ];
         // =======================================================
 
@@ -86,16 +78,25 @@
         const photoMeshes = []; 
         let baseMesh;
         let time = 0;
-        let isInteracting = false; // 防止连续点击
+        let isGlobalInteracting = false;
+        
+        // 射线投射器 (用于点击拾取)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredMesh = null;
+
+        // UI 粒子相关
+        const uiCanvas = document.getElementById('ui-canvas');
+        const uiCtx = uiCanvas.getContext('2d');
+        let uiParticles = [];
 
         init();
 
         function init() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x1a1a2e, 0.0015); // 雾气稍微淡一点，看清照片
+            scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // 调整摄像机位置，离得稍微远一点，因为照片变大了
             camera.position.set(0, 12, 65);
             camera.lookAt(0, 20, 0);
 
@@ -105,126 +106,103 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             const renderScene = new THREE.RenderPass(scene, camera);
-            // 调整辉光参数，让大照片看起来不那么刺眼
-            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.6, 0.4, 0.8);
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 1.2, 100);
-            pointLight.position.set(0, 25, 0);
+            const pointLight = new THREE.PointLight(0xff0066, 1.5, 100);
+            pointLight.position.set(0, 30, 0);
             scene.add(pointLight);
 
             createMemorySpiral();
             createBase();
-            createParticles(); 
+            createEnvironmentalParticles(); 
 
             window.addEventListener('resize', onWindowResize);
-            document.getElementById('wish-btn').addEventListener('click', triggerSpecialMoment);
+            document.getElementById('wish-btn').addEventListener('click', triggerGlobalBurst);
+            
+            // 新增交互事件监听
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('touchmove', onTouchMove, { passive: false });
+            window.addEventListener('click', onClick);
+            
+            initUICanvas();
+        }
+
+        function initUICanvas() {
+            uiCanvas.width = window.innerWidth;
+            uiCanvas.height = window.innerHeight;
         }
 
         function createMemorySpiral() {
             spiralGroup = new THREE.Group();
             scene.add(spiralGroup);
-
             if (chatImages.length === 0) { finishLoading(); return; }
-
             const loader = new THREE.TextureLoader();
             let loadedCount = 0;
             const progressDiv = document.getElementById('load-progress');
-
             const totalPhotos = chatImages.length;
-            // 【关键修改】增加照片基础尺寸和间距
-            const baseSize = 14; // 原来是 6，现在改大到 14
-            const heightStep = 2.0; // 增加垂直间距
-            const angleStep = 0.45;  
-            const maxRadius = 25;   // 稍微增加底部半径
+            const baseSize = 14; const heightStep = 2.2; const angleStep = 0.48; const maxRadius = 26; 
 
             chatImages.forEach((url, index) => {
                 loader.load(url, (texture) => {
                     const aspect = texture.image.width / texture.image.height;
-                    const w = baseSize;
-                    const h = baseSize / aspect;
-                    const geometry = new THREE.PlaneGeometry(w, h);
-
-                    // 【关键修改】识别特殊照片
+                    const geometry = new THREE.PlaneGeometry(baseSize, baseSize / aspect);
                     const isSpecial = url.includes('love_');
-
                     const material = new THREE.MeshBasicMaterial({
-                        map: texture,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        // 特殊照片更不透明(更亮)，普通照片半透明
-                        opacity: isSpecial ? 1.0 : 0.8, 
-                        blending: THREE.AdditiveBlending,
-                        depthWrite: false
+                        map: texture, side: THREE.DoubleSide, transparent: true,
+                        opacity: isSpecial ? 1.0 : 0.85, 
+                        blending: THREE.AdditiveBlending, depthWrite: false
                     });
-
                     const mesh = new THREE.Mesh(geometry, material);
-
                     const progress = index / totalPhotos; 
-                    const y = index * heightStep + 5; 
+                    const y = index * heightStep + 6; 
                     const angle = index * angleStep; 
-                    const radius = maxRadius * (1 - progress * 0.7); 
-
+                    const radius = maxRadius * (1 - progress * 0.65); 
                     mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
                     mesh.lookAt(new THREE.Vector3(mesh.position.x * 2, mesh.position.y, mesh.position.z * 2));
-                    
-                    mesh.userData = {
-                        initialRotation: mesh.rotation.clone(),
-                        angle: angle,
-                        radius: radius,
-                        // 标记是否为特殊照片
-                        isSpecial: isSpecial
-                    };
-
+                    mesh.userData = { initialPos: mesh.position.clone(), initialRot: mesh.rotation.clone(), angle: angle, radius: radius, isSpecial: isSpecial, isInteracting: false };
                     spiralGroup.add(mesh);
                     photoMeshes.push(mesh);
-
                     loadedCount++;
-                    progressDiv.innerText = Math.floor((loadedCount / totalPhotos) * 100) + "%";
+                    progressDiv.innerText = `LOADING DATA: ${Math.floor((loadedCount / totalPhotos) * 100)}%`;
                     if (loadedCount === totalPhotos) finishLoading();
-
                 }, undefined, (err) => console.error('加载失败:', url));
             });
         }
 
         function createBase() {
-            const geometry = new THREE.TorusGeometry(28, 0.5, 16, 100);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff0066 });
+            const geometry = new THREE.TorusGeometry(30, 0.4, 16, 100);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0066, transparent: true, opacity: 0.6 });
             const torus = new THREE.Mesh(geometry, material);
             torus.rotation.x = Math.PI / 2; scene.add(torus);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 512;
+            const canvas = document.createElement('canvas'); width = 512; height = 512; canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ff0066';
-            ctx.font = 'bold 40px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('❤️ Jiabao & Me ❤️', 256, 230);
-            ctx.font = '30px Arial';
-            ctx.fillText(baseText, 256, 280);
-            
+            ctx.fillStyle = '#ff0066'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center';
+            ctx.shadowColor = "#ff0066"; ctx.shadowBlur = 20;
+            ctx.fillText('❤️ Jiabao & Me ❤️', width/2, height/2 - 20);
+            ctx.font = '30px Arial'; ctx.fillText(baseText, width/2, height/2 + 30);
             const texture = new THREE.CanvasTexture(canvas);
-            const planeGeo = new THREE.PlaneGeometry(20, 20);
-            const planeMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+            const planeGeo = new THREE.PlaneGeometry(22, 22);
+            const planeMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.8 });
             baseMesh = new THREE.Mesh(planeGeo, planeMat);
             baseMesh.rotation.x = -Math.PI / 2; baseMesh.position.y = 0.5;
             scene.add(baseMesh);
         }
 
-        function createParticles() {
+        function createEnvironmentalParticles() {
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
-            for (let i = 0; i < 600; i++) {
-                vertices.push(THREE.MathUtils.randFloatSpread(120)); 
-                vertices.push(THREE.MathUtils.randFloatSpread(120) + 30); 
-                vertices.push(THREE.MathUtils.randFloatSpread(120)); 
+            for (let i = 0; i < 800; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(150)); 
+                vertices.push(THREE.MathUtils.randFloatSpread(150) + 40); 
+                vertices.push(THREE.MathUtils.randFloatSpread(150)); 
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xff0066, size: 0.5, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+            const material = new THREE.PointsMaterial({ color: 0xff3399, size: 0.4, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
             const points = new THREE.Points(geometry, material);
             scene.add(points);
         }
@@ -235,117 +213,140 @@
              animate();
         }
 
-        // 【关键修改】全新的互动逻辑
-        function triggerSpecialMoment() {
-            if(isInteracting) return;
-            isInteracting = true;
+        // ================== 新增交互逻辑 ==================
 
-            // 1. 辉光瞬间增强
+        // 鼠标移动处理 (用于UI粒子)
+        function onMouseMove(event) {
+            addUIParticles(event.clientX, event.clientY);
+            updateRaycaster(event.clientX, event.clientY);
+        }
+        // 触摸移动处理
+        function onTouchMove(event) {
+            if(event.touches.length > 0) {
+                addUIParticles(event.touches[0].clientX, event.touches[0].clientY);
+                updateRaycaster(event.touches[0].clientX, event.touches[0].clientY);
+            }
+        }
+
+        // 更新射线位置
+        function updateRaycaster(x, y) {
+            mouse.x = (x / window.innerWidth) * 2 - 1;
+            mouse.y = -(y / window.innerHeight) * 2 + 1;
+        }
+
+        // 点击事件处理 (精准拾取)
+        function onClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(photoMeshes);
+
+            if (intersects.length > 0) {
+                const targetMesh = intersects[0].object;
+                highlightSinglePhoto(targetMesh);
+            }
+        }
+
+        // 高亮单个照片 (飞到面前)
+        function highlightSinglePhoto(mesh) {
+            if (mesh.userData.isInteracting || isGlobalInteracting) return;
+            mesh.userData.isInteracting = true;
+
+            // 强辉光闪烁
             new TWEEN.Tween(bloomPass)
-                .to({ strength: 3.5, radius: 1.0 }, 300)
-                .easing(TWEEN.Easing.Quadratic.Out)
-                .chain(
-                    new TWEEN.Tween(bloomPass)
-                        .to({ strength: 1.5, radius: 0.4 }, 1500)
-                        .easing(TWEEN.Easing.Quadratic.In)
-                )
-                .start();
+                .to({ strength: 3.0 }, 200).yoyo(true).repeat(1).easing(TWEEN.Easing.Quadratic.Out).start();
 
+            // 计算相机前方的目标位置
+            const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(20));
+            const targetRot = camera.rotation.clone();
+
+            // 飞向相机的动画
+            new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
+            new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
+            new TWEEN.Tween(mesh.scale).to({ x: 2, y: 2, z: 2 }, 800).easing(TWEEN.Easing.Back.Out.config(1.7)).start();
+
+            // 如果是特殊照片，额外加个旋转
+            if(mesh.userData.isSpecial) {
+                new TWEEN.Tween(mesh.rotation).to({z: Math.PI * 2}, 2000).delay(800).easing(TWEEN.Easing.Quadratic.InOut).start();
+            }
+
+            // 3秒后飞回
+            setTimeout(() => {
+                new TWEEN.Tween(mesh.position).to({ x: mesh.userData.initialPos.x, y: mesh.userData.initialPos.y, z: mesh.userData.initialPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+                new TWEEN.Tween(mesh.rotation).to({ x: mesh.userData.initialRot.x, y: mesh.userData.initialRot.y, z: mesh.userData.initialRot.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+                new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, 1000).easing(TWEEN.Easing.Quadratic.InOut)
+                .onComplete(() => { mesh.userData.isInteracting = false; mesh.rotation.set(mesh.userData.initialRot.x, mesh.userData.initialRot.y, mesh.userData.initialRot.z); }).start();
+            }, 3500);
+        }
+
+        // 原有的全局按钮交互
+        function triggerGlobalBurst() {
+            if(isGlobalInteracting) return; isGlobalInteracting = true;
+            new TWEEN.Tween(bloomPass).to({ strength: 4.0, radius: 1.2 }, 300).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(bloomPass).to({ strength: 1.6, radius: 0.4 }, 1500).easing(TWEEN.Easing.Quadratic.In)).start();
             photoMeshes.forEach(mesh => {
-                const originalScale = mesh.scale.x;
-                
+                if (mesh.userData.isInteracting) return; 
                 if (mesh.userData.isSpecial) {
-                    // === 特殊合照：缓慢360度旋转致敬 ===
-                    new TWEEN.Tween(mesh.rotation)
-                        // 在当前基础上增加 2*PI (360度) 并稍微抬起头
-                        .to({ y: mesh.rotation.y + Math.PI * 2, x: mesh.rotation.x - 0.3 }, 2500) 
-                        .easing(TWEEN.Easing.Cubic.InOut)
-                        .onComplete(() => {
-                            // 动画结束后恢复原状
-                             new TWEEN.Tween(mesh.rotation)
-                                .to({ x: mesh.userData.initialRotation.x }, 1000)
-                                .easing(TWEEN.Easing.Quadratic.Out)
-                                .start();
-                        })
-                        .start();
-                        
-                     // 同时轻微放大
-                     new TWEEN.Tween(mesh.scale)
-                        .to({ x: originalScale * 1.2, y: originalScale * 1.2 }, 1250)
-                        .easing(TWEEN.Easing.Sinusoidal.Out)
-                        .yoyo(true).repeat(1)
-                        .start();
-
+                    new TWEEN.Tween(mesh.rotation).to({ y: mesh.rotation.y + Math.PI * 2, x: mesh.rotation.x - 0.4 }, 2500).easing(TWEEN.Easing.Cubic.InOut).onComplete(() => { new TWEEN.Tween(mesh.rotation).to({ x: mesh.userData.initialRot.x }, 1000).easing(TWEEN.Easing.Quadratic.Out).start(); }).start();
+                    new TWEEN.Tween(mesh.scale).to({ x: 1.3, y: 1.3 }, 1250).easing(TWEEN.Easing.Sinusoidal.Out).yoyo(true).repeat(1).start();
                 } else {
-                    // === 普通照片：快速弹跳 ===
-                    new TWEEN.Tween(mesh.scale)
-                        .to({ x: originalScale * 1.3, y: originalScale * 1.3 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .chain(
-                            new TWEEN.Tween(mesh.scale)
-                                .to({ x: originalScale, y: originalScale }, 500)
-                                .easing(TWEEN.Easing.Elastic.Out)
-                        )
-                        .start();
+                    new TWEEN.Tween(mesh.scale).to({ x: 1.4, y: 1.4 }, 200).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1 }, 500).easing(TWEEN.Easing.Elastic.Out)).start();
                 }
             });
+            setTimeout(() => { isGlobalInteracting = false; }, 3000);
+        }
 
-            // 3秒后允许再次点击
-            setTimeout(() => { isInteracting = false; }, 3000);
+        // UI 粒子系统
+        function addUIParticles(x, y) {
+            for(let i=0; i<3; i++) {
+                uiParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                    life: 1.0, color: Math.random()>0.5?'#ff0066':'#00f7ff', size: Math.random()*3+1
+                });
+            }
+        }
+        function updateUIParticles() {
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            uiParticles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02; p.size *= 0.95;
+                if(p.life <= 0) { uiParticles.splice(i, 1); return; }
+                uiCtx.beginPath(); uiCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                uiCtx.fillStyle = p.color; uiCtx.globalAlpha = p.life; uiCtx.fill();
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
             time += 0.005;
             TWEEN.update();
-
-            if (spiralGroup) spiralGroup.rotation.y -= 0.0015; 
-
+            if (spiralGroup) spiralGroup.rotation.y -= 0.0012; 
             photoMeshes.forEach((mesh, i) => {
-                // 只有不在交互状态时才进行日常浮动，避免冲突
-                if(!isInteracting) {
-                     mesh.position.y += Math.sin(time * 2 + i) * 0.015;
-                     // 特殊照片自转稍微快一点点
-                     const rotateSpeed = mesh.userData.isSpecial ? 0.15 : 0.08;
-                     mesh.rotation.y = mesh.userData.initialRotation.y + Math.sin(time + i * 0.5) * rotateSpeed;
+                if(!mesh.userData.isInteracting && !isGlobalInteracting) {
+                     mesh.position.y += Math.sin(time * 2.5 + i) * 0.012;
+                     const rotateSpeed = mesh.userData.isSpecial ? 0.12 : 0.06;
+                     mesh.rotation.y = mesh.userData.initialRot.y + Math.sin(time + i * 0.6) * rotateSpeed;
                 }
             });
-            
-            if(baseMesh) baseMesh.rotation.z += 0.004;
-            
-            camera.position.x = Math.cos(time * 0.15) * 65;
-            camera.position.z = Math.sin(time * 0.15) * 65;
-            camera.lookAt(0, 25, 0); 
-
+            if(baseMesh) baseMesh.rotation.z += 0.003;
+            camera.position.x = Math.cos(time * 0.1) * 65; camera.position.z = Math.sin(time * 0.1) * 65; camera.lookAt(0, 25, 0); 
             composer.render();
+            updateUIParticles();
         }
 
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight);
+            initUICanvas();
         }
 
         let musicPlaying = false;
-        // 建议替换成你们喜欢的歌的直链
         const audio = new Audio('https://cdn.pixabay.com/download/audio/2022/10/28/audio_b0984c5738.mp3?filename=christmas-dream-124578.mp3'); 
         audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
             if (!musicPlaying) {
-                audio.play().then(() => {
-                    this.innerText = "🎵 Playing...";
-                    this.style.color = "#ff0066";
-                    musicPlaying = true;
-                }).catch(e => console.log("需用户交互播放"));
+                audio.play().then(() => { this.innerText = "🎵 Playing..."; this.style.color = "#ff0066"; this.style.background = "rgba(255,0,102,0.2)"; musicPlaying = true; }).catch(e => console.log("需用户交互播放"));
             } else {
-                audio.pause();
-                this.innerText = "🎵 Music Off";
-                this.style.color = "rgba(255,255,255,0.9)";
-                musicPlaying = false;
+                audio.pause(); this.innerText = "🎵 Music Off"; this.style.color = "rgba(255,255,255,0.8)"; this.style.background = "rgba(0,0,0,0.3)"; musicPlaying = false;
             }
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 </body>
 </html>
