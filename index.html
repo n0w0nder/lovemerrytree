@@ -3,35 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Our Memory Tree</title>
+    <title>Our Memory DNA Tree</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Arial', sans-serif; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Microsoft YaHei', sans-serif; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
         
-        #ui-layer { position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
-        #input-box { pointer-events: auto; background: rgba(0, 0, 0, 0.6); border: 1px solid #00f7ff; color: #00f7ff; padding: 10px; border-radius: 20px; outline: none; width: 60%; font-size: 16px; box-shadow: 0 0 10px #00f7ff; }
-        #send-btn { pointer-events: auto; background: linear-gradient(45deg, #00f7ff, #d400ff); border: none; color: white; padding: 10px 20px; border-radius: 20px; margin-left: 10px; font-size: 16px; cursor: pointer; }
+        /* UI层 */
+        #ui-layer { position: absolute; bottom: 30px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
+        #wish-btn { 
+            pointer-events: auto; background: linear-gradient(45deg, #ff0066, #ff5e00); 
+            border: none; color: white; padding: 12px 30px; border-radius: 30px; 
+            font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 102, 0.5);
+            transition: transform 0.2s;
+        }
+        #wish-btn:active { transform: scale(0.95); }
         
-        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.8); z-index: 10; font-size: 14px; text-shadow: 0 0 5px #00f7ff; }
-        #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #00f7ff; border: 1px solid #00f7ff; padding: 5px 10px; border-radius: 15px; font-size: 12px; cursor: pointer; }
+        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.9); z-index: 10; font-size: 16px; letter-spacing: 2px; text-shadow: 0 0 10px #ff0066; }
+        #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #ff0066; border: 1px solid #ff0066; padding: 5px 15px; border-radius: 15px; font-size: 12px; cursor: pointer; }
         
         /* Loading 遮罩 */
-        #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; color: #00f7ff; flex-direction: column; transition: opacity 1s; }
+        #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; color: #ff0066; flex-direction: column; transition: opacity 0.8s; }
+        .loader-spinner { border: 4px solid rgba(255, 0, 102, 0.2); border-top: 4px solid #ff0066; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="loading">
-        <div>正在构建浪漫宇宙...</div>
-        <div style="font-size: 12px; color: #666; margin-top: 10px;">资源加载中</div>
+        <div class="loader-spinner"></div>
+        <div>正在从 2025.9.12 提取回忆...</div>
+        <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 10px;">0%</div>
     </div>
 
-    <div id="top-msg">✨ 每一颗粒子，都是我想你的瞬间 ✨</div>
+    <div id="top-msg">✨ Jiabao & Me ✨</div>
     <div id="music-control">🎵 Music Off</div>
     <div id="canvas-container"></div>
     
     <div id="ui-layer">
-        <input type="text" id="input-box" placeholder="写下明年的愿望..." maxlength="20">
-        <button id="send-btn">发送</button>
+        <button id="wish-btn">💖 我们的点点滴滴 💖</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -42,235 +50,257 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
     <script>
-        // ================= 配置区域 =================
-        // 这里填你上传到GitHub的照片文件名
-        // 如果没有照片，保留空数组 []，程序会自动忽略
-        const myPhotos = [
-            'p1.jpg', 
-            'p2.jpg',
-            'p3.jpg' 
-        ]; 
-        // ===========================================
+        // ================= 配置区域 (兄弟改这里) =================
+        
+        // 1. 你们的纪念日文字
+        const baseText = "Since 2025.9.12"; 
 
-        let scene, camera, renderer, composer, bloomPass;
-        let treeParticles, starPoints;
-        const wishes = []; 
-        const photoOrbits = [];
+        // 2. 你的聊天记录文件名列表 (按时间顺序从旧到新排列)
+        // 确保这些文件已经上传到GitHub仓库，和index.html在同一个位置
+        const chatImages = [
+            // 示例数据，请替换成你自己的文件名
+            // 'chat_01_begin.jpg',
+            // 'chat_02_funny.jpg',
+            // 'chat_03_love.jpg',
+            // ... 越多越壮观，建议 20-40 张
+            // 为了演示效果，我先用一些占位图，你发布前一定要删掉下面这些
+            'https://picsum.photos/id/10/300/300',
+            'https://picsum.photos/id/20/300/400',
+            'https://picsum.photos/id/30/300/300',
+            'https://picsum.photos/id/40/300/400',
+            'https://picsum.photos/id/50/300/300',
+            'https://picsum.photos/id/60/300/400',
+            'https://picsum.photos/id/70/300/300',
+            'https://picsum.photos/id/80/300/400',
+            'https://picsum.photos/id/90/300/300',
+            'https://picsum.photos/id/100/300/400',
+            'https://picsum.photos/id/110/300/300',
+            'https://picsum.photos/id/120/300/400',
+            'https://picsum.photos/id/130/300/300',
+            'https://picsum.photos/id/140/300/400',
+             'https://picsum.photos/id/150/300/300',
+             'https://picsum.photos/id/160/300/300',
+        ];
+
+        // =======================================================
+
+        let scene, camera, renderer, composer;
+        let spiralGroup; // 存放所有照片的组
+        const photoMeshes = []; // 存放单个照片网格方便动画
+        let baseMesh;
         let time = 0;
 
         init();
-        animate();
 
         function init() {
-            // 场景
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.001);
+            // 制造一点迷雾感
+            scene.fog = new THREE.FogExp2(0x1a1a2e, 0.002);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 45;
-            camera.position.y = 10;
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            // 摄像机位置：稍微仰视
+            camera.position.set(0, 10, 55);
+            camera.lookAt(0, 15, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 优化性能
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // 后期辉光
+            // 后期辉光特效 (让照片看起来像全息投影)
             const renderScene = new THREE.RenderPass(scene, camera);
-            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.6, 0.4, 0.85);
+            // 参数：强度, 半径, 阈值 (强度调高一点，更有科技感)
+            const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.8, 0.5, 0.8);
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
-            createParticleTree();
-            createStars();
-            createTopStar();
-            
-            // 加载照片
-            if(myPhotos.length > 0) {
-                loadPhotos();
-            } else {
-                document.getElementById('loading').style.opacity = 0;
-                setTimeout(()=> document.getElementById('loading').remove(), 1000);
-            }
-
             // 灯光
-            const ambientLight = new THREE.AmbientLight(0x404040);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
+            // 增加一个暖色点光源在中心
+            const pointLight = new THREE.PointLight(0xff0066, 1.5, 100);
+            pointLight.position.set(0, 20, 0);
+            scene.add(pointLight);
+
+            // 创建核心内容
+            createMemorySpiral();
+            createBase();
+            createParticles(); // 增加氛围粒子
 
             window.addEventListener('resize', onWindowResize);
-            document.getElementById('send-btn').addEventListener('click', makeWish);
+            
+            // 点击按钮产生特效
+            document.getElementById('wish-btn').addEventListener('click', triggerBurst);
         }
 
-        function createParticleTree() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            const colors = [];
-            const layers = 90; 
-            const countPerLayer = 35; 
-            let maxWidth = 18;
+        function createMemorySpiral() {
+            spiralGroup = new THREE.Group();
+            scene.add(spiralGroup);
 
-            for (let i = 0; i < layers; i++) {
-                let y = i * 0.5;
-                let currentRadius = maxWidth * (1 - i / layers);
-                for (let j = 0; j < countPerLayer; j++) {
-                    let angle = (j / countPerLayer) * Math.PI * 2 + i * 0.15;
-                    let r = currentRadius + (Math.random() - 0.5) * 1.0;
-                    let x = r * Math.cos(angle);
-                    let z = r * Math.sin(angle);
-                    vertices.push(x, y - 22, z);
-                    
-                    const color = new THREE.Color();
-                    // 更加梦幻的蓝紫配色
-                    color.setHSL(0.55 + Math.random()*0.1, 0.9, 0.6);
-                    colors.push(color.r, color.g, color.b);
-                }
+            if (chatImages.length === 0) {
+                 finishLoading(); return;
             }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            const material = new THREE.PointsMaterial({ size: 0.5, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.9, map: getTexture() });
-            treeParticles = new THREE.Points(geometry, material);
-            scene.add(treeParticles);
-        }
 
-        function createStars() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 1500; i++) {
-                vertices.push(THREE.MathUtils.randFloatSpread(300));
-                vertices.push(THREE.MathUtils.randFloatSpread(300));
-                vertices.push(THREE.MathUtils.randFloatSpread(300));
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0x888888, size: 0.4, transparent: true, opacity: 0.6 });
-            starPoints = new THREE.Points(geometry, material);
-            scene.add(starPoints);
-        }
-
-        function createTopStar() {
-            const geometry = new THREE.SphereGeometry(1.2, 16, 16);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
-            const topStar = new THREE.Mesh(geometry, material);
-            topStar.position.set(0, 24, 0);
-            scene.add(topStar);
-            // 这是一个强光点
-            const light = new THREE.PointLight(0xffdd00, 1.5, 60);
-            light.position.set(0, 24, 0);
-            scene.add(light);
-        }
-
-        function loadPhotos() {
             const loader = new THREE.TextureLoader();
             let loadedCount = 0;
-            
-            myPhotos.forEach((url, index) => {
+            const progressDiv = document.getElementById('load-progress');
+
+            const totalPhotos = chatImages.length;
+            const heightStep = 1.2; // 每张照片的高度间隔
+            const angleStep = 0.5;  // 每张照片的角度间隔 (弧度)
+            const maxRadius = 20;   // 底部的最大半径
+
+            chatImages.forEach((url, index) => {
                 loader.load(url, (texture) => {
-                    // 创建照片卡片
+                    // 根据图片比例创建几何体
                     const aspect = texture.image.width / texture.image.height;
-                    const w = 6; 
-                    const h = w / aspect;
-                    const geo = new THREE.PlaneGeometry(w, h);
-                    const mat = new THREE.MeshBasicMaterial({ 
-                        map: texture, 
+                    const baseSize = 6; // 基础大小
+                    const w = baseSize;
+                    const h = baseSize / aspect;
+                    const geometry = new THREE.PlaneGeometry(w, h);
+
+                    // 核心材质：全息发光效果
+                    const material = new THREE.MeshBasicMaterial({
+                        map: texture,
                         side: THREE.DoubleSide,
                         transparent: true,
-                        opacity: 0.9
+                        opacity: 0.85, // 半透明
+                        blending: THREE.AdditiveBlending, // 叠加发光模式
+                        depthWrite: false // 防止透明遮挡错误
                     });
-                    const mesh = new THREE.Mesh(geo, mat);
-                    
-                    // 随机轨道参数
-                    const orbitRadius = 25 + Math.random() * 10;
-                    const orbitY = (Math.random() - 0.5) * 30;
-                    const speed = 0.005 + Math.random() * 0.01;
-                    const angle = (index / myPhotos.length) * Math.PI * 2;
-                    
-                    photoOrbits.push({ mesh, orbitRadius, orbitY, speed, angle });
-                    scene.add(mesh);
-                    
-                    // 加载进度
+
+                    const mesh = new THREE.Mesh(geometry, material);
+
+                    // --- 螺旋位置计算 (数学部分) ---
+                    const progress = index / totalPhotos; // 0 到 1 的进度
+                    const y = index * heightStep + 2; // 高度上升
+                    const angle = index * angleStep; // 角度旋转
+                    const radius = maxRadius * (1 - progress * 0.8); // 半径随高度减小，形成锥形
+
+                    mesh.position.set(
+                        Math.cos(angle) * radius,
+                        y,
+                        Math.sin(angle) * radius
+                    );
+
+                    // 让照片稍微面向外侧倾斜，更有立体感
+                    mesh.lookAt(new THREE.Vector3(mesh.position.x * 2, mesh.position.y, mesh.position.z * 2));
+                    // 保存初始角度用于动画
+                    mesh.userData.initialRotation = mesh.rotation.clone();
+                    mesh.userData.angle = angle;
+                    mesh.userData.radius = radius;
+
+                    spiralGroup.add(mesh);
+                    photoMeshes.push(mesh);
+
                     loadedCount++;
-                    if(loadedCount === myPhotos.length) {
-                        document.getElementById('loading').style.opacity = 0;
-                        setTimeout(()=> document.getElementById('loading').remove(), 1000);
-                    }
+                    progressDiv.innerText = Math.floor((loadedCount / totalPhotos) * 100) + "%";
+                    if (loadedCount === totalPhotos) finishLoading();
+
                 }, undefined, (err) => {
-                    console.error('图片加载失败，请检查文件名', err);
-                    loadedCount++; // 即使失败也继续
-                    if(loadedCount === myPhotos.length) document.getElementById('loading').remove();
+                    console.error('图片加载失败:', url);
+                    loadedCount++;
+                    if (loadedCount === totalPhotos) finishLoading();
                 });
             });
         }
 
-        function makeWish() {
-            const input = document.getElementById('input-box');
-            const text = input.value.trim();
-            if (text === "") return;
-            input.value = ""; 
-            
-            // 生成文字纹理
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 512; canvas.height = 128;
-            ctx.fillStyle = '#ff00de'; // 霓虹粉
-            ctx.font = 'bold 30px "Microsoft YaHei"';
-            ctx.textAlign = 'center';
-            ctx.fillText(text, 256, 70);
-            const texture = new THREE.CanvasTexture(canvas);
+        function createBase() {
+            // 创建一个发光圆环底座
+            const geometry = new THREE.TorusGeometry(22, 0.5, 16, 100);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0066 });
+            const torus = new THREE.Mesh(geometry, material);
+            torus.rotation.x = Math.PI / 2;
+            torus.position.y = 0;
+            scene.add(torus);
 
-            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(material);
-            sprite.scale.set(12, 3, 1);
+            // 创建底座文字 (用Canvas画出来贴上去)
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ff0066';
+            ctx.font = 'bold 40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('❤️ Jiabao & Me ❤️', 256, 230);
+            ctx.font = '30px Arial';
+            ctx.fillText(baseText, 256, 280);
             
-            // 从屏幕下方飞入
-            sprite.position.set(0, -30, 20);
-            
-            // 目标：围绕树旋转
-            sprite.userData = {
-                angle: Math.random() * Math.PI * 2,
-                radius: 15 + Math.random() * 5,
-                y: (Math.random() - 0.5) * 20,
-                speed: 0.02
-            };
-            
-            scene.add(sprite);
-            wishes.push(sprite);
+            const texture = new THREE.CanvasTexture(canvas);
+            const planeGeo = new THREE.PlaneGeometry(15, 15);
+            const planeMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+            baseMesh = new THREE.Mesh(planeGeo, planeMat);
+            baseMesh.rotation.x = -Math.PI / 2; // 平躺
+            baseMesh.position.y = 0.5;
+            scene.add(baseMesh);
+        }
+
+        function createParticles() {
+            // 增加环境中的漂浮光点
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 500; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(100)); // x
+                vertices.push(THREE.MathUtils.randFloatSpread(100) + 20); // y (偏上方)
+                vertices.push(THREE.MathUtils.randFloatSpread(100)); // z
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0xff0066, size: 0.4, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+            const points = new THREE.Points(geometry, material);
+            scene.add(points);
+        }
+
+        function finishLoading() {
+             document.getElementById('loading').style.opacity = 0;
+             setTimeout(() => document.getElementById('loading').remove(), 800);
+             animate();
+        }
+
+        function triggerBurst() {
+            // 点击按钮时的特效：所有照片瞬间膨胀再收缩
+            photoMeshes.forEach(mesh => {
+                const originalScale = mesh.scale.x;
+                // 简单的弹跳动画
+                new TWEEN.Tween(mesh.scale)
+                    .to({ x: originalScale * 1.5, y: originalScale * 1.5 }, 200)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .chain(
+                        new TWEEN.Tween(mesh.scale)
+                            .to({ x: originalScale, y: originalScale }, 500)
+                            .easing(TWEEN.Easing.Elastic.Out)
+                    )
+                    .start();
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            time += 0.01;
+            time += 0.005;
+            TWEEN.update();
 
-            // 1. 树的自转
-            treeParticles.rotation.y += 0.002;
-            starPoints.rotation.y -= 0.0005;
+            // 1. 整体螺旋上升旋转 (核心动画)
+            if (spiralGroup) {
+                spiralGroup.rotation.y -= 0.002; // 缓慢自转
+            }
 
-            // 2. 模拟呼吸律动 (模拟心跳/音乐节奏)
-            const beat = 1 + Math.sin(time * 3) * 0.05; // 缩放系数
-            treeParticles.scale.set(beat, beat, beat);
-            bloomPass.strength = 1.6 + Math.sin(time * 3) * 0.2; // 辉光强度跳动
-
-            // 3. 许愿球动画
-            wishes.forEach(sprite => {
-                // 螺旋上升并归位
-                const targetX = Math.cos(sprite.userData.angle) * sprite.userData.radius;
-                const targetZ = Math.sin(sprite.userData.angle) * sprite.userData.radius;
+            // 2. 单个照片的动态效果
+            photoMeshes.forEach((mesh, i) => {
+                // 让照片在原地轻微上下浮动，增加灵动感
+                mesh.position.y += Math.sin(time * 2 + i) * 0.02;
                 
-                // 简单的平滑移动
-                sprite.position.x += (targetX - sprite.position.x) * 0.05;
-                sprite.position.z += (targetZ - sprite.position.z) * 0.05;
-                sprite.position.y += (sprite.userData.y - sprite.position.y) * 0.05;
-                
-                sprite.userData.angle += sprite.userData.speed; // 持续公转
+                // 让照片轻微自转，展示全息感
+                mesh.rotation.y = mesh.userData.initialRotation.y + Math.sin(time + i * 0.5) * 0.1;
             });
-
-            // 4. 照片墙动画 (让照片始终面向相机)
-            photoOrbits.forEach(p => {
-                p.angle += p.speed;
-                p.mesh.position.x = Math.cos(p.angle) * p.orbitRadius;
-                p.mesh.position.z = Math.sin(p.angle) * p.orbitRadius;
-                p.mesh.position.y = p.orbitY + Math.sin(time + p.angle) * 2; // 上下浮动
-                p.mesh.lookAt(camera.position); // 永远面向相机
-            });
+            
+            // 3. 底座文字缓慢旋转
+            if(baseMesh) {
+                baseMesh.rotation.z += 0.005;
+            }
+            
+            // 4. 摄像机缓慢环绕运动
+            camera.position.x = Math.cos(time * 0.2) * 55;
+            camera.position.z = Math.sin(time * 0.2) * 55;
+            camera.lookAt(0, 20, 0); // 始终看着树中心偏上的位置
 
             composer.render();
         }
@@ -282,35 +312,26 @@
             composer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function getTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 32; canvas.height = 32;
-            const ctx = canvas.getContext('2d');
-            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 32, 32);
-            const texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            return texture;
-        }
-
-        // 音乐控制 (如果需要)
+        // 音乐控制 (需要替换你自己的mp3链接)
         let musicPlaying = false;
-        const audio = new Audio('https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=christmas-ident-126633.mp3'); 
-        audio.loop = true;
+        // 建议找一首对你们有意义的歌，上传到网盘获取直链
+        const audio = new Audio('https://cdn.pixabay.com/download/audio/2022/10/28/audio_b0984c5738.mp3?filename=christmas-dream-124578.mp3'); 
+        audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
             if (!musicPlaying) {
-                audio.play();
-                this.innerText = "🎵 Playing...";
-                musicPlaying = true;
+                audio.play().then(() => {
+                    this.innerText = "🎵 Playing...";
+                    this.style.color = "#ff0066";
+                    musicPlaying = true;
+                }).catch(e => console.log("需用户交互播放"));
             } else {
                 audio.pause();
                 this.innerText = "🎵 Music Off";
+                this.style.color = "rgba(255,255,255,0.9)";
                 musicPlaying = false;
             }
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 </body>
 </html>
