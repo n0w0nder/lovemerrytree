@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Our Memory DNA Tree</title>
+    <title>家宝和宝宝的专属时空</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Microsoft YaHei', sans-serif; cursor: crosshair; }
-        /* 3D容器 */
         #canvas-container { width: 100%; height: 100%; position: absolute; z-index: 1; background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
-        /* 2D UI粒子层 (新增) */
         #ui-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; mix-blend-mode: screen; }
-
-        /* UI层 */
         #ui-layer { position: absolute; bottom: 30px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
         #wish-btn { 
             pointer-events: auto; background: rgba(0,0,0,0.5); 
@@ -22,33 +18,33 @@
         }
         #wish-btn:hover { background: #ff0066; color: white; box-shadow: 0 0 30px rgba(255, 0, 102, 0.8); }
         #wish-btn:active { transform: scale(0.95); }
-        
-        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.8); z-index: 10; font-size: 14px; letter-spacing: 3px; text-shadow: 0 0 10px #ff0066; text-transform: uppercase; }
+        /* 【修改点2】顶部文字改了 */
+        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.8); z-index: 10; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 10px #ff0066; font-weight: bold; }
         #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #ff0066; border: 1px solid #ff0066; padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer;background: rgba(0,0,0,0.3); }
-        
-        /* Loading 遮罩 */
         #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; color: #ff0066; flex-direction: column; transition: opacity 0.8s; }
         .loader-spinner { border: 3px solid rgba(255, 0, 102, 0.2); border-top: 3px solid #ff0066; border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 25px; box-shadow: 0 0 20px #ff0066; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* 点击提示 */
-        #click-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 8; font-size: 14px; pointer-events: none; animation: fadeOut 4s forwards 2s; }
+        #click-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 8; font-size: 14px; pointer-events: none; animation: fadeOut 4s forwards 3s; opacity: 0; }
         @keyframes fadeOut { to { opacity: 0; } }
+        /* 新增入场动画 class */
+        .genesis-active #click-hint { opacity: 1; transition: opacity 1s 3s; }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="loader-spinner"></div>
-        <div style="letter-spacing: 2px;">正在接入 2025.9.12 时空档案...</div>
+        <div style="letter-spacing: 2px; font-weight: bold;">正在构建属于家宝和宝宝的时空...</div>
         <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 15px; font-family: monospace;">LOADING: 0%</div>
     </div>
 
-    <div id="top-msg">✨ Jiabao & Me / Since 2025.9.12 ✨</div>
+    <div id="top-msg">✨ 家宝和宝宝 / Since 2025.9.12 ✨</div>
     <div id="music-control">🎵 Music Off</div>
     <div id="click-hint">💡 试着点击螺旋上的照片</div>
     
     <div id="canvas-container"></div>
-    <canvas id="ui-canvas"></canvas> <div id="ui-layer">
+    <canvas id="ui-canvas"></canvas>
+    
+    <div id="ui-layer">
         <button id="wish-btn">⚡ 全局记忆共鸣 ⚡</button>
     </div>
 
@@ -64,28 +60,26 @@
     <script>
         // ================= 配置区域 =================
         const baseText = "Since 2025.9.12"; 
+        // 你的照片列表 (保持你上次修改的正确版本)
         const chatImages = [
             'chat01.jpg', 'chat02.jpg', 'chat04.jpg', 'chat05.jpg', 'chat07.jpg',
             'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
             'chat13.jpg', 'chat14.jpg', 'chat15.jpg', 'chat16.jpg', 'chat17.jpg',
             'chat18.jpg', 'chat19.jpg', 'chat20.jpg',
-            'love_1.jpg', 'love_2.jpg' // 你的特殊照片
+            'love_1.jpg', 'love_2.jpg' 
         ];
         // =======================================================
 
         let scene, camera, renderer, composer, bloomPass;
-        let spiralGroup; 
+        let spiralGroup, baseMesh; 
         const photoMeshes = []; 
-        let baseMesh;
         let time = 0;
         let isGlobalInteracting = false;
-        
-        // 射线投射器 (用于点击拾取)
+        let isGenesisAnimating = true; // 是否正在进行开场动画
+
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        let hoveredMesh = null;
 
-        // UI 粒子相关
         const uiCanvas = document.getElementById('ui-canvas');
         const uiCtx = uiCanvas.getContext('2d');
         let uiParticles = [];
@@ -97,8 +91,8 @@
             scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 12, 65);
-            camera.lookAt(0, 20, 0);
+            camera.position.set(0, 12, 75); // 相机稍微拉远一点看全景
+            camera.lookAt(0, 25, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -113,7 +107,7 @@
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 1.5, 100);
+            const pointLight = new THREE.PointLight(0xff0066, 2.0, 150);
             pointLight.position.set(0, 30, 0);
             scene.add(pointLight);
 
@@ -123,8 +117,6 @@
 
             window.addEventListener('resize', onWindowResize);
             document.getElementById('wish-btn').addEventListener('click', triggerGlobalBurst);
-            
-            // 新增交互事件监听
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('touchmove', onTouchMove, { passive: false });
             window.addEventListener('click', onClick);
@@ -139,7 +131,11 @@
 
         function createMemorySpiral() {
             spiralGroup = new THREE.Group();
+            // 【新增】初始隐藏，用于开场动画
+            spiralGroup.scale.set(0.01, 0.01, 0.01);
+            spiralGroup.visible = false;
             scene.add(spiralGroup);
+
             if (chatImages.length === 0) { finishLoading(); return; }
             const loader = new THREE.TextureLoader();
             let loadedCount = 0;
@@ -168,7 +164,7 @@
                     spiralGroup.add(mesh);
                     photoMeshes.push(mesh);
                     loadedCount++;
-                    progressDiv.innerText = `LOADING DATA: ${Math.floor((loadedCount / totalPhotos) * 100)}%`;
+                    progressDiv.innerText = `DATA LOADED: ${Math.floor((loadedCount / totalPhotos) * 100)}%`;
                     if (loadedCount === totalPhotos) finishLoading();
                 }, undefined, (err) => console.error('加载失败:', url));
             });
@@ -181,15 +177,19 @@
             torus.rotation.x = Math.PI / 2; scene.add(torus);
             const canvas = document.createElement('canvas'); width = 512; height = 512; canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ff0066'; ctx.font = 'bold 40px Arial'; ctx.textAlign = 'center';
-            ctx.shadowColor = "#ff0066"; ctx.shadowBlur = 20;
-            ctx.fillText('❤️ Jiabao & Me ❤️', width/2, height/2 - 20);
-            ctx.font = '30px Arial'; ctx.fillText(baseText, width/2, height/2 + 30);
+            ctx.fillStyle = '#ff0066'; ctx.font = 'bold 46px "Microsoft YaHei"'; ctx.textAlign = 'center';
+            ctx.shadowColor = "#ff0066"; ctx.shadowBlur = 25;
+            // 【修改点4】底座文字改了
+            ctx.fillText('❤️ 家宝和宝宝 ❤️', width/2, height/2 - 20);
+            ctx.font = '32px Arial'; ctx.fillText(baseText, width/2, height/2 + 40);
             const texture = new THREE.CanvasTexture(canvas);
-            const planeGeo = new THREE.PlaneGeometry(22, 22);
-            const planeMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.8 });
+            const planeGeo = new THREE.PlaneGeometry(24, 24);
+            const planeMat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.9 });
             baseMesh = new THREE.Mesh(planeGeo, planeMat);
             baseMesh.rotation.x = -Math.PI / 2; baseMesh.position.y = 0.5;
+            // 【新增】初始隐藏
+            baseMesh.scale.set(0.01, 0.01, 0.01);
+            baseMesh.visible = false;
             scene.add(baseMesh);
         }
 
@@ -210,65 +210,95 @@
         function finishLoading() {
              document.getElementById('loading').style.opacity = 0;
              setTimeout(() => document.getElementById('loading').remove(), 800);
+             
+             // 【新增】触发创世纪开场动画
+             triggerGenesisAnimation();
              animate();
         }
 
-        // ================== 新增交互逻辑 ==================
+        // 【新增】创世纪开场动画函数
+        function triggerGenesisAnimation() {
+            spiralGroup.visible = true;
+            baseMesh.visible = true;
 
-        // 鼠标移动处理 (用于UI粒子)
+            // 1. 辉光爆发
+            new TWEEN.Tween(bloomPass)
+                .to({ strength: 4.5, radius: 1.5 }, 500)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .chain(
+                    new TWEEN.Tween(bloomPass)
+                    .to({ strength: 1.6, radius: 0.4 }, 2500)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                ).start();
+
+            // 2. 螺旋塔生长
+            new TWEEN.Tween(spiralGroup.scale)
+                .to({ x: 1, y: 1, z: 1 }, 3000)
+                .easing(TWEEN.Easing.Elastic.Out.config(1, 0.75))
+                .start();
+            
+            // 3. 螺旋塔快速旋转展开
+            new TWEEN.Tween(spiralGroup.rotation)
+                .to({ y: Math.PI * 2 }, 2500)
+                .easing(TWEEN.Easing.Exponential.Out)
+                .start();
+
+            // 4. 底座生长
+            new TWEEN.Tween(baseMesh.scale)
+                .to({ x: 1, y: 1, z: 1 }, 2800)
+                .easing(TWEEN.Easing.Elastic.Out.config(1, 0.9))
+                .onComplete(() => {
+                    isGenesisAnimating = false;
+                    document.body.classList.add('genesis-active'); // 显示提示文字
+                })
+                .start();
+        }
+
+
+        // ================== 交互逻辑 ==================
+
         function onMouseMove(event) {
             addUIParticles(event.clientX, event.clientY);
             updateRaycaster(event.clientX, event.clientY);
         }
-        // 触摸移动处理
         function onTouchMove(event) {
             if(event.touches.length > 0) {
                 addUIParticles(event.touches[0].clientX, event.touches[0].clientY);
                 updateRaycaster(event.touches[0].clientX, event.touches[0].clientY);
             }
         }
-
-        // 更新射线位置
         function updateRaycaster(x, y) {
             mouse.x = (x / window.innerWidth) * 2 - 1;
             mouse.y = -(y / window.innerHeight) * 2 + 1;
         }
 
-        // 点击事件处理 (精准拾取)
         function onClick(event) {
+            if(isGenesisAnimating) return; // 开场时不准点
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(photoMeshes);
-
             if (intersects.length > 0) {
-                const targetMesh = intersects[0].object;
-                highlightSinglePhoto(targetMesh);
+                highlightSinglePhoto(intersects[0].object);
             }
         }
 
-        // 高亮单个照片 (飞到面前)
         function highlightSinglePhoto(mesh) {
             if (mesh.userData.isInteracting || isGlobalInteracting) return;
             mesh.userData.isInteracting = true;
 
-            // 强辉光闪烁
             new TWEEN.Tween(bloomPass)
                 .to({ strength: 3.0 }, 200).yoyo(true).repeat(1).easing(TWEEN.Easing.Quadratic.Out).start();
 
-            // 计算相机前方的目标位置
             const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(20));
             const targetRot = camera.rotation.clone();
 
-            // 飞向相机的动画
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.scale).to({ x: 2, y: 2, z: 2 }, 800).easing(TWEEN.Easing.Back.Out.config(1.7)).start();
 
-            // 如果是特殊照片，额外加个旋转
             if(mesh.userData.isSpecial) {
                 new TWEEN.Tween(mesh.rotation).to({z: Math.PI * 2}, 2000).delay(800).easing(TWEEN.Easing.Quadratic.InOut).start();
             }
 
-            // 3秒后飞回
             setTimeout(() => {
                 new TWEEN.Tween(mesh.position).to({ x: mesh.userData.initialPos.x, y: mesh.userData.initialPos.y, z: mesh.userData.initialPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
                 new TWEEN.Tween(mesh.rotation).to({ x: mesh.userData.initialRot.x, y: mesh.userData.initialRot.y, z: mesh.userData.initialRot.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
@@ -277,9 +307,8 @@
             }, 3500);
         }
 
-        // 原有的全局按钮交互
         function triggerGlobalBurst() {
-            if(isGlobalInteracting) return; isGlobalInteracting = true;
+            if(isGlobalInteracting || isGenesisAnimating) return; isGlobalInteracting = true;
             new TWEEN.Tween(bloomPass).to({ strength: 4.0, radius: 1.2 }, 300).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(bloomPass).to({ strength: 1.6, radius: 0.4 }, 1500).easing(TWEEN.Easing.Quadratic.In)).start();
             photoMeshes.forEach(mesh => {
                 if (mesh.userData.isInteracting) return; 
@@ -293,7 +322,6 @@
             setTimeout(() => { isGlobalInteracting = false; }, 3000);
         }
 
-        // UI 粒子系统
         function addUIParticles(x, y) {
             for(let i=0; i<3; i++) {
                 uiParticles.push({
@@ -317,16 +345,17 @@
             requestAnimationFrame(animate);
             time += 0.005;
             TWEEN.update();
-            if (spiralGroup) spiralGroup.rotation.y -= 0.0012; 
+            // 开场动画结束后才开始缓慢自转
+            if (spiralGroup && !isGenesisAnimating) spiralGroup.rotation.y -= 0.0012; 
             photoMeshes.forEach((mesh, i) => {
-                if(!mesh.userData.isInteracting && !isGlobalInteracting) {
+                if(!mesh.userData.isInteracting && !isGlobalInteracting && !isGenesisAnimating) {
                      mesh.position.y += Math.sin(time * 2.5 + i) * 0.012;
                      const rotateSpeed = mesh.userData.isSpecial ? 0.12 : 0.06;
                      mesh.rotation.y = mesh.userData.initialRot.y + Math.sin(time + i * 0.6) * rotateSpeed;
                 }
             });
-            if(baseMesh) baseMesh.rotation.z += 0.003;
-            camera.position.x = Math.cos(time * 0.1) * 65; camera.position.z = Math.sin(time * 0.1) * 65; camera.lookAt(0, 25, 0); 
+            if(baseMesh && !isGenesisAnimating) baseMesh.rotation.z += 0.003;
+            camera.position.x = Math.cos(time * 0.1) * 75; camera.position.z = Math.sin(time * 0.1) * 75; camera.lookAt(0, 25, 0); 
             composer.render();
             updateUIParticles();
         }
