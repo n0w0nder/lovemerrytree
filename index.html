@@ -81,7 +81,7 @@
         let isOpening = false;
         let isViewingSinglePhoto = false; 
 
-        // 调整下沉高度，因为视角变平了，不用沉太深
+        // 保持下沉高度，让盒子在屏幕中下部
         const GLOBAL_Y_OFFSET = -8; 
 
         const raycaster = new THREE.Raycaster();
@@ -99,8 +99,8 @@
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
             
-            // 【修改点1】大幅降低Y轴高度，实现平视；同时稍微拉远Z轴，保证视野开阔
-            camera.position.set(0, 5, 65); 
+            // 【修改点】视角上调：Y从5提到16，既不平也不太陡，完美视角
+            camera.position.set(0, 16, 65); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -375,13 +375,11 @@
 
             const currentPos = mesh.position.clone();
             const currentRot = mesh.rotation.clone();
-            // 【修改点2】计算更远的相机距离，防止照片切边
-            const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(25)); 
+            const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(25));
             const targetRot = camera.rotation.clone();
 
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
-            // 【修改点3】缩放倍数调整
             new TWEEN.Tween(mesh.scale).to({ x: 1.75, y: 1.75, z: 1.75 }, 800).easing(TWEEN.Easing.Back.Out).start();
 
             setTimeout(() => {
