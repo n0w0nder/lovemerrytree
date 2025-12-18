@@ -73,13 +73,16 @@
 
         let scene, camera, renderer, composer, bloomPass;
         let boxGroup, boxBase, lidGroup, lidMesh;
-        let photoGroup;
+        let photoGroup, particlesMesh;
         const photoMeshes = []; 
         let time = 0;
         
         let isBoxOpened = false; 
         let isOpening = false;
         let isViewingSinglePhoto = false; 
+
+        // 【修改点1】全局下沉高度
+        const GLOBAL_Y_OFFSET = -15;
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
@@ -95,8 +98,7 @@
             scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // 【修改点1】视角降低：Y从35降到20，Z从60降到50，更平视
-            camera.position.set(0, 20, 50); 
+            camera.position.set(0, 35, 60); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -136,6 +138,8 @@
 
         function createHeartBox() {
             boxGroup = new THREE.Group();
+            // 【修改点2】盒子整体下沉
+            boxGroup.position.y = GLOBAL_Y_OFFSET;
             scene.add(boxGroup);
 
             const x = 0, y = 0;
@@ -158,20 +162,23 @@
             const baseGeo = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
             baseGeo.center();
             boxBase = new THREE.Mesh( baseGeo, boxMaterial );
+            // 【修改点3】修正旋转：只绕X轴旋转，心尖朝前
             boxBase.rotation.x = -Math.PI / 2; 
-            boxBase.rotation.z = -Math.PI / 2; 
+            boxBase.rotation.z = 0; 
             boxGroup.add(boxBase);
 
             lidGroup = new THREE.Group();
-            lidGroup.position.set(0, 2.5, -5.5); 
+            // 调整铰链位置到盒子后方
+            lidGroup.position.set(0, 2.5, -8); 
             boxGroup.add(lidGroup);
 
             const lidGeo = new THREE.ExtrudeGeometry( heartShape, lidSettings );
             lidGeo.center();
             lidMesh = new THREE.Mesh( lidGeo, boxMaterial );
             lidMesh.rotation.x = -Math.PI / 2; 
-            lidMesh.rotation.z = -Math.PI / 2; 
-            lidMesh.position.set(0, 0, 5.5);
+            lidMesh.rotation.z = 0;
+            // 调整盖子相对铰链的偏移
+            lidMesh.position.set(0, 0, 8);
             lidGroup.add(lidMesh);
         }
 
@@ -197,6 +204,8 @@
 
         function createPhotoFountain() {
             photoGroup = new THREE.Group();
+            // 【修改点4】照片组整体下沉
+            photoGroup.position.y = GLOBAL_Y_OFFSET;
             scene.add(photoGroup);
 
             if (chatImages.length === 0) { finishLoading(); return; }
@@ -274,8 +283,10 @@
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             const material = new THREE.PointsMaterial({ color: 0xff3399, size: 0.4, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
-            const points = new THREE.Points(geometry, material);
-            scene.add(points);
+            particlesMesh = new THREE.Points(geometry, material);
+            // 【修改点5】环境粒子整体下沉
+            particlesMesh.position.y = GLOBAL_Y_OFFSET;
+            scene.add(particlesMesh);
         }
 
         function finishLoading() {
@@ -373,7 +384,6 @@
 
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
-            // 【修改点2】放大比例从 3.5 缩小到 1.75
             new TWEEN.Tween(mesh.scale).to({ x: 1.75, y: 1.75, z: 1.75 }, 800).easing(TWEEN.Easing.Back.Out).start();
 
             setTimeout(() => {
