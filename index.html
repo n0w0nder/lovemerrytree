@@ -35,13 +35,13 @@
 <body>
     <div id="loading">
         <div class="loader-spinner"></div>
-        <div style="letter-spacing: 2px; font-weight: bold;">正在准备礼物...</div>
+        <div style="letter-spacing: 2px; font-weight: bold;">正在打包爱的回忆...</div>
         <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 15px; font-family: monospace;">LOADING: 0%</div>
     </div>
 
     <div id="top-msg">✨ 家宝和宝宝 / Since 2025.9.12 ✨</div>
     <div id="music-control">🎵 Music Off</div>
-    <div id="click-hint">💡 点击任意一张照片查看详情</div>
+    <div id="click-hint">💡 点击漂浮的照片查看</div>
     
     <div id="canvas-container"></div>
     <canvas id="ui-canvas"></canvas>
@@ -62,7 +62,7 @@
     <script>
         // ================= 配置区域 =================
         const baseText = "Since 2025.9.12"; 
-        // 你的照片列表 (保持你上次的配置)
+        // 你的照片列表
         const chatImages = [
             'chat01.jpg', 'chat02.jpg', 'chat04.jpg', 'chat05.jpg', 'chat07.jpg',
             'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
@@ -73,14 +73,14 @@
         // =======================================================
 
         let scene, camera, renderer, composer, bloomPass;
-        let spiralGroup, boxBase, boxLid;
+        let boxGroup, boxBase, lidGroup, lidMesh;
+        let photoGroup;
         const photoMeshes = []; 
         let time = 0;
         
         // 状态锁
-        let isGlobalInteracting = false; 
-        let isGenesisAnimating = false; 
-        let isBoxOpened = false; // 盒子是否已打开
+        let isBoxOpened = false; 
+        let isOpening = false;
         let isViewingSinglePhoto = false; 
 
         const raycaster = new THREE.Raycaster();
@@ -97,8 +97,9 @@
             scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 15, 60); // 初始视角稍微高一点
-            camera.lookAt(0, 5, 0);
+            // 调整视角：更低一点，正对着盒子前方
+            camera.position.set(0, 20, 50); 
+            camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -106,23 +107,22 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             const renderScene = new THREE.RenderPass(scene, camera);
-            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.6, 0.4, 0.8);
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 2.0, 150);
-            pointLight.position.set(0, 30, 0);
+            const pointLight = new THREE.PointLight(0xff0066, 2.0, 100);
+            pointLight.position.set(0, 20, 20);
             scene.add(pointLight);
 
-            createHeartBox(); // 创建盒子
-            createMemorySpiral(); // 创建树（隐藏）
+            createHeartBox(); // 创建带铰链的盒子
+            createPhotoFountain(); // 创建照片喷泉（初始隐藏）
             createEnvironmentalParticles(); 
 
             window.addEventListener('resize', onWindowResize);
-            // 按钮现在控制开盒
             document.getElementById('wish-btn').addEventListener('click', onMainBtnClick);
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('touchmove', onTouchMove, { passive: false });
@@ -136,11 +136,14 @@
             uiCanvas.height = window.innerHeight;
         }
 
-        // ================== 核心：创建3D心形盒子 ==================
+        // ================== 创建3D心形盒子 (带翻盖铰链) ==================
         function createHeartBox() {
+            boxGroup = new THREE.Group();
+            scene.add(boxGroup);
+
             const x = 0, y = 0;
             const heartShape = new THREE.Shape();
-            // 绘制心形路径
+            // 绘制心形 (尖尖朝下)
             heartShape.moveTo( x + 5, y + 5 );
             heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
             heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
@@ -149,41 +152,49 @@
             heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
             heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
 
-            const extrudeSettings = { depth: 4, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
-            const lidSettings = { depth: 0.5, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
+            const extrudeSettings = { depth: 5, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
+            const lidSettings = { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
 
-            // 材质：类似3D打印的塑料/玻璃质感
             const boxMaterial = new THREE.MeshPhysicalMaterial({ 
-                color: 0xff0066, metalness: 0.1, roughness: 0.3, transmission: 0.2, transparent: true, opacity: 0.9 
+                color: 0xff0066, metalness: 0.2, roughness: 0.1, transmission: 0.1, transparent: true, opacity: 0.95, side: THREE.DoubleSide
             });
+            const innerMaterial = new THREE.MeshBasicMaterial({ color: 0x330011 }); // 盒子内部深色
 
-            // 1. 盒子主体
+            // 1. 底座
             const baseGeo = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
-            baseGeo.center(); // 居中
+            baseGeo.center();
             boxBase = new THREE.Mesh( baseGeo, boxMaterial );
-            boxBase.rotation.x = Math.PI; // 翻转一下让心尖朝下或调整角度
-            boxBase.rotation.z = Math.PI; // 调整心形方向
-            boxBase.scale.set(1.5, 1.5, 1.5);
-            boxBase.position.y = -5;
-            scene.add( boxBase );
+            
+            // 旋转修正：让心尖朝前(Z轴正向)，平躺
+            boxBase.rotation.x = Math.PI / 2; // 躺平
+            boxBase.rotation.z = Math.PI;     // 尖尖朝前
+            boxGroup.add(boxBase);
 
-            // 2. 盒子盖子
+            // 2. 盖子铰链系统 (关键点)
+            // 我们需要一个 Pivot (轴心点)，放在心形的凹陷处（最远处）
+            lidGroup = new THREE.Group();
+            // 根据心形几何体估算，心形凹陷处大概在 Z负方向
+            lidGroup.position.set(0, 2.5, -6); // 这里的 Y 是高度，Z 是深度位置
+            boxGroup.add(lidGroup);
+
+            // 盖子网格
             const lidGeo = new THREE.ExtrudeGeometry( heartShape, lidSettings );
             lidGeo.center();
-            boxLid = new THREE.Mesh( lidGeo, boxMaterial );
-            // 盖子初始位置在盒子上方
-            boxLid.position.set(0, 0, -2.5); // 相对父级位置调整
+            lidMesh = new THREE.Mesh( lidGeo, boxMaterial );
             
-            // 为了做掀开动画，我们需要一个父级对象作为“铰链”
-            // 但为了简单，我们做“垂直升起 + 旋转”的悬浮开盖效果
-            boxBase.add(boxLid); // 盖子作为底座的子对象跟随移动
+            // 把盖子网格放到轴心点对应的位置
+            lidMesh.rotation.x = Math.PI / 2; 
+            lidMesh.rotation.z = Math.PI;
+            // 修正盖子相对于轴心的偏移
+            lidMesh.position.set(0, 0, 6); 
+            
+            lidGroup.add(lidMesh);
         }
 
-        function createMemorySpiral() {
-            spiralGroup = new THREE.Group();
-            spiralGroup.scale.set(0, 0, 0); // 初始隐藏在盒子里
-            spiralGroup.position.y = -2; // 起点在盒子内部
-            scene.add(spiralGroup);
+        // ================== 创建照片喷泉 (Explosion) ==================
+        function createPhotoFountain() {
+            photoGroup = new THREE.Group();
+            scene.add(photoGroup);
 
             if (chatImages.length === 0) { finishLoading(); return; }
 
@@ -191,7 +202,7 @@
             let loadedCount = 0;
             const progressDiv = document.getElementById('load-progress');
             const totalPhotos = chatImages.length;
-            const baseSize = 14; const heightStep = 2.2; const angleStep = 0.48; const maxRadius = 26; 
+            const baseSize = 8; // 照片大小
 
             chatImages.forEach((url, index) => {
                 loader.load(url, (texture) => {
@@ -200,32 +211,44 @@
                     const isSpecial = url.includes('love_');
                     const material = new THREE.MeshBasicMaterial({
                         map: texture, side: THREE.DoubleSide, transparent: true,
-                        opacity: isSpecial ? 1.0 : 0.85, 
-                        blending: THREE.AdditiveBlending, depthWrite: false
+                        opacity: isSpecial ? 1.0 : 0.9, 
                     });
                     const mesh = new THREE.Mesh(geometry, material);
-                    const progress = index / totalPhotos; 
-                    const y = index * heightStep + 6; 
-                    const angle = index * angleStep; 
-                    const radius = maxRadius * (1 - progress * 0.65); 
-                    mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
-                    mesh.lookAt(new THREE.Vector3(mesh.position.x * 2, mesh.position.y, mesh.position.z * 2));
                     
+                    // --- 关键：随机分布位置 ---
+                    // 初始位置全部在盒子里 (0,0,0)
+                    mesh.position.set(0, 0, 0);
+                    mesh.scale.set(0, 0, 0); // 初始不可见
+
+                    // 计算爆炸后的目标位置 (球形/喷泉分布)
+                    // 使用球坐标系生成随机点
+                    const phi = Math.acos( -1 + ( 2 * index ) / totalPhotos );
+                    const theta = Math.sqrt( totalPhotos * Math.PI ) * phi;
+                    
+                    // 半径范围 15 - 30
+                    const radius = 15 + Math.random() * 15;
+                    
+                    const targetX = radius * Math.cos( theta ) * Math.sin( phi );
+                    const targetY = 10 + Math.random() * 20; // 都在上方
+                    const targetZ = radius * Math.sin( theta ) * Math.sin( phi );
+
                     mesh.userData = { 
-                        initialPos: mesh.position.clone(), 
-                        initialRot: mesh.rotation.clone(), 
-                        angle: angle, 
-                        radius: radius, 
+                        targetPos: new THREE.Vector3(targetX, targetY, targetZ),
+                        initialRot: new THREE.Euler(Math.random()*0.5, Math.random()*Math.PI, 0),
                         isSpecial: isSpecial, 
                         isInteracting: false 
                     };
-                    spiralGroup.add(mesh);
+                    
+                    // 让照片随机朝向
+                    mesh.rotation.copy(mesh.userData.initialRot);
+
+                    photoGroup.add(mesh);
                     photoMeshes.push(mesh);
 
                     loadedCount++;
                     updateLoadStatus(loadedCount, totalPhotos);
                 }, undefined, (err) => {
-                    console.error('图片加载失败，跳过:', url);
+                    console.error('跳过坏图:', url);
                     loadedCount++; updateLoadStatus(loadedCount, totalPhotos);
                 });
             });
@@ -240,10 +263,10 @@
         function createEnvironmentalParticles() {
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
-            for (let i = 0; i < 800; i++) {
-                vertices.push(THREE.MathUtils.randFloatSpread(150)); 
-                vertices.push(THREE.MathUtils.randFloatSpread(150) + 40); 
-                vertices.push(THREE.MathUtils.randFloatSpread(150)); 
+            for (let i = 0; i < 600; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(120)); 
+                vertices.push(THREE.MathUtils.randFloatSpread(120) + 30); 
+                vertices.push(THREE.MathUtils.randFloatSpread(120)); 
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             const material = new THREE.PointsMaterial({ color: 0xff3399, size: 0.4, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
@@ -260,70 +283,64 @@
              animate();
         }
 
-        // ================== 核心交互逻辑 ==================
+        // ================== 交互逻辑 ==================
 
-        // 按钮点击逻辑：如果没开盒，则开盒；如果开了，则播放特效
         function onMainBtnClick() {
             if (!isBoxOpened) {
-                openBoxAndGrowTree();
+                openBox();
             } else {
-                triggerGlobalBurst();
+                // 如果已经打开，再次点击就是辉光特效
+                new TWEEN.Tween(bloomPass).to({ strength: 3.0 }, 300).yoyo(true).repeat(1).start();
             }
         }
 
-        // 1. 开盒 + 生长动画
-        function openBoxAndGrowTree() {
-            if(isGenesisAnimating) return;
-            isGenesisAnimating = true;
+        function openBox() {
+            if(isOpening) return;
+            isOpening = true;
             isBoxOpened = true;
             
-            // 按钮文字变化
             const btn = document.getElementById('wish-btn');
-            btn.innerText = "⚡ 全局记忆共鸣 ⚡";
+            btn.style.opacity = 0; // 隐藏按钮让视野更干净
 
-            // A. 盖子打开动画 (向上浮起并旋转)
-            new TWEEN.Tween(boxLid.position)
-                .to({ z: -15 }, 2000) // 向后/上移开
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .start();
-            new TWEEN.Tween(boxLid.rotation)
-                .to({ x: -Math.PI / 4 }, 2000) // 倾斜
-                .easing(TWEEN.Easing.Quadratic.InOut)
+            // 1. 翻盖动画 (围绕 Pivot 旋转)
+            new TWEEN.Tween(lidGroup.rotation)
+                .to({ x: -Math.PI * 0.7 }, 2000) // 向后翻开 120度左右
+                .easing(TWEEN.Easing.Bounce.Out) // 带一点回弹，显得真实
                 .start();
 
-            // B. 辉光爆发
+            // 2. 辉光爆发
             new TWEEN.Tween(bloomPass)
                 .to({ strength: 5.0, radius: 1.5 }, 500)
-                .delay(500)
+                .delay(300)
                 .easing(TWEEN.Easing.Quadratic.Out)
-                .chain(
-                    new TWEEN.Tween(bloomPass)
-                    .to({ strength: 1.6, radius: 0.4 }, 2000)
-                    .easing(TWEEN.Easing.Quadratic.InOut)
-                ).start();
+                .chain(new TWEEN.Tween(bloomPass).to({ strength: 1.5, radius: 0.4 }, 2000)).start();
 
-            // C. 记忆树生长 (延迟一点点，等盖子打开)
-            new TWEEN.Tween(spiralGroup.scale)
-                .to({ x: 1, y: 1, z: 1 }, 2500)
-                .delay(800) // 等盖子开一点
-                .easing(TWEEN.Easing.Elastic.Out.config(1, 0.75))
-                .start();
-            
-            new TWEEN.Tween(spiralGroup.rotation)
-                .to({ y: Math.PI * 2 }, 2500)
-                .delay(800)
-                .easing(TWEEN.Easing.Exponential.Out)
-                .onComplete(() => {
-                    isGenesisAnimating = false;
-                    document.getElementById('click-hint').classList.add('show-hint');
-                })
-                .start();
+            // 3. 照片喷发 (Fountain Effect)
+            photoMeshes.forEach((mesh, i) => {
+                // 延迟随机一点，不要一起出来
+                const delay = 500 + Math.random() * 1000;
                 
-            // D. 摄像机拉远一点看全景
-            new TWEEN.Tween(camera.position)
-                .to({ y: 12, z: 75 }, 2000)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .start();
+                // 位置动画
+                new TWEEN.Tween(mesh.position)
+                    .to({ x: mesh.userData.targetPos.x, y: mesh.userData.targetPos.y, z: mesh.userData.targetPos.z }, 2000)
+                    .delay(delay)
+                    .easing(TWEEN.Easing.Back.Out.config(0.8)) // 抛物线感觉
+                    .start();
+                
+                // 缩放动画 (从0变大)
+                new TWEEN.Tween(mesh.scale)
+                    .to({ x: 1, y: 1, z: 1 }, 1000)
+                    .delay(delay)
+                    .easing(TWEEN.Easing.Elastic.Out)
+                    .start();
+            });
+
+            // 4. 显示提示文字
+            setTimeout(() => {
+                document.getElementById('click-hint').classList.add('show-hint');
+                btn.innerText = "✨ 家宝 ❤️ 宝宝 ✨";
+                btn.style.opacity = 1;
+            }, 3000);
         }
 
         function onMouseMove(event) {
@@ -342,8 +359,7 @@
         }
 
         function onClick(event) {
-            // 只有盒子打开后才能点击照片
-            if(!isBoxOpened || isGenesisAnimating || isViewingSinglePhoto || isGlobalInteracting) return;
+            if(!isBoxOpened || isViewingSinglePhoto) return;
             
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(photoMeshes);
@@ -355,44 +371,32 @@
         function highlightSinglePhoto(mesh) {
             isViewingSinglePhoto = true; 
             mesh.userData.isInteracting = true; 
-            const hint = document.getElementById('click-hint');
-            if(hint) hint.classList.add('hide-hint');
+            document.getElementById('click-hint').classList.add('hide-hint');
 
-            new TWEEN.Tween(bloomPass).to({ strength: 3.5 }, 300).yoyo(true).repeat(1).easing(TWEEN.Easing.Quadratic.Out).start();
+            // 记录飞来前的位置
+            const currentPos = mesh.position.clone();
+            const currentRot = mesh.rotation.clone();
 
-            const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(20));
+            // 计算目标位置（飞到相机正前方）
+            const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(15));
             const targetRot = camera.rotation.clone();
 
+            // 飞来
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
-            new TWEEN.Tween(mesh.scale).to({ x: 2.5, y: 2.5, z: 2.5 }, 800).easing(TWEEN.Easing.Back.Out.config(1.2)).start();
+            new TWEEN.Tween(mesh.scale).to({ x: 3.5, y: 3.5, z: 3.5 }, 800).easing(TWEEN.Easing.Back.Out).start();
 
+            // 停留 2 秒
             setTimeout(() => {
-                new TWEEN.Tween(mesh.position).to({ x: mesh.userData.initialPos.x, y: mesh.userData.initialPos.y, z: mesh.userData.initialPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
-                new TWEEN.Tween(mesh.rotation).to({ x: mesh.userData.initialRot.x, y: mesh.userData.initialRot.y, z: mesh.userData.initialRot.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+                // 飞回
+                new TWEEN.Tween(mesh.position).to({ x: currentPos.x, y: currentPos.y, z: currentPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+                new TWEEN.Tween(mesh.rotation).to({ x: currentRot.x, y: currentRot.y, z: currentRot.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
                 new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, 1000).easing(TWEEN.Easing.Quadratic.InOut)
                 .onComplete(() => { 
                     mesh.userData.isInteracting = false; 
                     isViewingSinglePhoto = false; 
-                    mesh.rotation.set(mesh.userData.initialRot.x, mesh.userData.initialRot.y, mesh.userData.initialRot.z);
                 }).start();
             }, 2800); 
-        }
-
-        function triggerGlobalBurst() {
-            if(!isBoxOpened || isGlobalInteracting || isGenesisAnimating || isViewingSinglePhoto) return; 
-            isGlobalInteracting = true;
-            new TWEEN.Tween(bloomPass).to({ strength: 4.0, radius: 1.2 }, 300).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(bloomPass).to({ strength: 1.6, radius: 0.4 }, 1500).easing(TWEEN.Easing.Quadratic.In)).start();
-            photoMeshes.forEach(mesh => {
-                if (mesh.userData.isInteracting) return; 
-                if (mesh.userData.isSpecial) {
-                    new TWEEN.Tween(mesh.rotation).to({ y: mesh.rotation.y + Math.PI * 2, x: mesh.rotation.x - 0.4 }, 2500).easing(TWEEN.Easing.Cubic.InOut).onComplete(() => { new TWEEN.Tween(mesh.rotation).to({ x: mesh.userData.initialRot.x }, 1000).easing(TWEEN.Easing.Quadratic.Out).start(); }).start();
-                    new TWEEN.Tween(mesh.scale).to({ x: 1.3, y: 1.3 }, 1250).easing(TWEEN.Easing.Sinusoidal.Out).yoyo(true).repeat(1).start();
-                } else {
-                    new TWEEN.Tween(mesh.scale).to({ x: 1.4, y: 1.4 }, 200).easing(TWEEN.Easing.Quadratic.Out).chain(new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1 }, 500).easing(TWEEN.Easing.Elastic.Out)).start();
-                }
-            });
-            setTimeout(() => { isGlobalInteracting = false; }, 3000);
         }
 
         function addUIParticles(x, y) {
@@ -415,21 +419,16 @@
             time += 0.005;
             TWEEN.update();
             
-            // 只有在盒子打开后才旋转树
-            if (spiralGroup && isBoxOpened && !isGenesisAnimating && !isViewingSinglePhoto) { spiralGroup.rotation.y -= 0.0012; }
-            
-            // 盒子本体缓慢旋转展示
-            if (boxBase) { boxBase.rotation.z = Math.PI + Math.sin(time * 0.5) * 0.1; }
+            // 悬浮漂浮动画 (仅在照片散开后)
+            if(isBoxOpened) {
+                photoMeshes.forEach((mesh, i) => {
+                    if(!mesh.userData.isInteracting && !isViewingSinglePhoto) {
+                        mesh.position.y += Math.sin(time + i) * 0.02; // 上下浮动
+                        mesh.rotation.y += 0.002; // 缓慢自转
+                    }
+                });
+            }
 
-            photoMeshes.forEach((mesh, i) => {
-                if(!mesh.userData.isInteracting && !isGlobalInteracting && !isGenesisAnimating && !isViewingSinglePhoto) {
-                     mesh.position.y += Math.sin(time * 2.5 + i) * 0.012;
-                     const rotateSpeed = mesh.userData.isSpecial ? 0.12 : 0.06;
-                     mesh.rotation.y = mesh.userData.initialRot.y + Math.sin(time + i * 0.6) * rotateSpeed;
-                }
-            });
-            
-            if(!isViewingSinglePhoto && isBoxOpened) { camera.position.x = Math.cos(time * 0.1) * 75; camera.position.z = Math.sin(time * 0.1) * 75; camera.lookAt(0, 25, 0); }
             composer.render();
             updateUIParticles();
         }
