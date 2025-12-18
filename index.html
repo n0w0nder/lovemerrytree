@@ -83,7 +83,7 @@
         let isOpening = false;
         let isViewingSinglePhoto = false; 
 
-        const GLOBAL_Y_OFFSET = -8; 
+        const GLOBAL_Y_OFFSET = -14; 
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
@@ -100,7 +100,7 @@
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 16, 65); 
-            camera.lookAt(0, 0, 0);
+            camera.lookAt(0, -2, 0); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -321,7 +321,7 @@
                 .easing(TWEEN.Easing.Bounce.Out)
                 .start();
 
-            // 2. 辉光 (强度降低到 2.8)
+            // 2. 辉光
             new TWEEN.Tween(bloomPass)
                 .to({ strength: 2.8, radius: 1.5 }, 500)
                 .delay(200)
@@ -331,18 +331,19 @@
             // 3. 主角登场
             if (majorMesh) {
                 new TWEEN.Tween(majorMesh.position)
-                    .to({ x: 0, y: 25, z: 20 }, 2000)
+                    // 【修改点】目标Y值从 30 降到 18，让它停在画面中心
+                    .to({ x: 0, y: 18, z: 20 }, 2000)
                     .delay(500)
                     .easing(TWEEN.Easing.Cubic.Out)
                     .start();
                 
                 new TWEEN.Tween(majorMesh.rotation)
-                    .to({ x: 0, y: 0, z: 0 }, 2000)
+                    // 【修改点】稍微抬一点仰角，看起来更舒服
+                    .to({ x: -0.1, y: 0, z: 0 }, 2000)
                     .delay(500)
                     .easing(TWEEN.Easing.Cubic.Out)
                     .start();
 
-                // 【修改点】放大倍数从 3.5 降低到 2.2
                 new TWEEN.Tween(majorMesh.scale)
                     .to({ x: 2.2, y: 2.2, z: 2.2 }, 2000) 
                     .delay(500)
