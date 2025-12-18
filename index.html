@@ -63,7 +63,7 @@
         // ================= 配置区域 =================
         const baseText = "Since 2025.9.12"; 
         
-        // 【重要】请仔细核对这里的文件名，和 GitHub 上上传的必须一模一样
+        // 你的照片列表 (请确保文件名和 GitHub 上一致)
         const chatImages = [
             'chat01.jpg', 'chat02.jpg', 'chat04.jpg', 'chat05.jpg', 'chat07.jpg',
             'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
@@ -97,7 +97,7 @@
             scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 30, 60); // 稍微抬高一点视角，看清盒子
+            camera.position.set(0, 30, 60); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -105,7 +105,6 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // 后期特效配置
             const renderScene = new THREE.RenderPass(scene, camera);
             bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
             composer = new THREE.EffectComposer(renderer);
@@ -136,14 +135,13 @@
             uiCanvas.height = window.innerHeight;
         }
 
-        // ================== 创建3D心形盒子 (修正翻盖逻辑) ==================
+        // ================== 创建3D心形盒子 ==================
         function createHeartBox() {
             boxGroup = new THREE.Group();
             scene.add(boxGroup);
 
             const x = 0, y = 0;
             const heartShape = new THREE.Shape();
-            // 绘制心形
             heartShape.moveTo( x + 5, y + 5 );
             heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
             heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
@@ -163,32 +161,30 @@
             const baseGeo = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
             baseGeo.center();
             boxBase = new THREE.Mesh( baseGeo, boxMaterial );
-            // 旋转修正：尖尖朝向观众
+            // 修正：让心尖朝向你 (原 Math.PI 改为 0)
             boxBase.rotation.x = Math.PI / 2; 
-            boxBase.rotation.z = Math.PI; 
+            boxBase.rotation.z = 0; 
             boxGroup.add(boxBase);
 
-            // 2. 盖子铰链系统 (修正：翻开后平放)
+            // 2. 盖子铰链系统
             lidGroup = new THREE.Group();
-            // 根据心形形状，铰链位置大概在心形凹陷处 (Y正方向是凹陷处，转换坐标系后对应Z轴负方向)
-            lidGroup.position.set(0, 2.5, -5.5); 
+            // 调整铰链位置，适配旋转180度后的心形凹陷处 (现在是Z正方向)
+            lidGroup.position.set(0, 2.5, 5.5); 
             boxGroup.add(lidGroup);
 
             const lidGeo = new THREE.ExtrudeGeometry( heartShape, lidSettings );
             lidGeo.center();
             lidMesh = new THREE.Mesh( lidGeo, boxMaterial );
             
-            // 调整盖子相对于铰链的偏移
             lidMesh.rotation.x = Math.PI / 2; 
-            lidMesh.rotation.z = Math.PI;
-            lidMesh.position.set(0, 0, 5.5); // 偏移回来，使得旋转轴在边缘
+            lidMesh.rotation.z = 0; // 跟随底座方向
+            lidMesh.position.set(0, 0, -5.5); // 相对偏移
             
             lidGroup.add(lidMesh);
         }
 
-        // ================== 创建照片喷泉 (带容错机制) ==================
+        // ================== 创建照片喷泉 ==================
         
-        // 辅助函数：生成一个“图片缺失”的占位符纹理
         function createPlaceholderTexture(text) {
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 512;
@@ -203,9 +199,7 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('❤️', 256, 200);
-            ctx.font = 'bold 40px Arial';
-            ctx.fillText('Image Missing', 256, 300);
-            ctx.font = '30px Arial';
+            ctx.font = 'bold 30px Arial';
             ctx.fillStyle = '#ffffff';
             ctx.fillText(text, 256, 360);
             return new THREE.CanvasTexture(canvas);
@@ -223,17 +217,15 @@
             const baseSize = 8; 
 
             chatImages.forEach((url, index) => {
-                // 加载函数封装
                 const onLoad = (texture) => {
                     createPhotoMesh(texture, url, index, totalPhotos, baseSize);
                     loadedCount++;
                     updateLoadStatus(loadedCount, totalPhotos);
                 };
                 
-                // 错误处理封装：加载失败时使用占位符
                 const onError = (err) => {
                     console.log('Use placeholder for:', url);
-                    const placeholder = createPlaceholderTexture(url.split('/').pop()); // 显示文件名
+                    const placeholder = createPlaceholderTexture("加载失败: " + url.split('/').pop());
                     createPhotoMesh(placeholder, url, index, totalPhotos, baseSize);
                     loadedCount++;
                     updateLoadStatus(loadedCount, totalPhotos);
@@ -253,23 +245,23 @@
             });
             const mesh = new THREE.Mesh(geometry, material);
             
-            // 初始隐藏在盒子里
+            // 初始隐藏
             mesh.position.set(0, 0, 0);
             mesh.scale.set(0, 0, 0);
 
-            // 计算喷发后的目标位置
+            // 喷发位置
             const phi = Math.acos( -1 + ( 2 * index ) / total );
             const theta = Math.sqrt( total * Math.PI ) * phi;
             const radius = 15 + Math.random() * 15;
             
             const targetX = radius * Math.cos( theta ) * Math.sin( phi );
-            const targetY = 12 + Math.random() * 20; // 向上喷发
+            const targetY = 12 + Math.random() * 20; 
             const targetZ = radius * Math.sin( theta ) * Math.sin( phi );
 
             mesh.userData = { 
                 targetPos: new THREE.Vector3(targetX, targetY, targetZ),
                 initialRot: new THREE.Euler(Math.random()*0.5, Math.random()*Math.PI, 0),
-                initialPos: new THREE.Vector3(targetX, targetY, targetZ), // 记录归位点
+                initialPos: new THREE.Vector3(targetX, targetY, targetZ), 
                 isSpecial: isSpecial, 
                 isInteracting: false 
             };
@@ -281,7 +273,6 @@
         function updateLoadStatus(loadedCount, total) {
              const progressDiv = document.getElementById('load-progress');
              if(progressDiv) progressDiv.innerText = `LOADING MEMORIES: ${Math.floor((loadedCount / total) * 100)}%`;
-             // 只要全部处理完（无论成功失败），就完成加载
              if (loadedCount === total) finishLoading();
         }
 
@@ -326,11 +317,11 @@
             const btn = document.getElementById('wish-btn');
             btn.style.opacity = 0; 
 
-            // 1. 翻盖动画 (翻转180度，平放)
-            // 这里的旋转轴是 lidGroup，位于盒子后方
+            // 1. 翻盖动画 (修正：向后翻转)
+            // 这里的旋转轴是 lidGroup
             new TWEEN.Tween(lidGroup.rotation)
-                .to({ x: -Math.PI * 0.95 }, 2500) // 翻转接近180度
-                .easing(TWEEN.Easing.Bounce.Out) // 落地回弹效果
+                .to({ x: Math.PI * 0.95 }, 2500) // 翻转 180度左右
+                .easing(TWEEN.Easing.Bounce.Out) 
                 .start();
 
             // 2. 辉光爆发
@@ -340,22 +331,20 @@
                 .easing(TWEEN.Easing.Quadratic.Out)
                 .chain(new TWEEN.Tween(bloomPass).to({ strength: 1.5, radius: 0.4 }, 2000)).start();
 
-            // 3. 照片喷发
+            // 3. 照片喷发 (修复：去掉报错的 config)
             photoMeshes.forEach((mesh, i) => {
                 const delay = 400 + Math.random() * 1000;
                 
-                // 位置飞出
                 new TWEEN.Tween(mesh.position)
                     .to({ x: mesh.userData.targetPos.x, y: mesh.userData.targetPos.y, z: mesh.userData.targetPos.z }, 2000)
                     .delay(delay)
-                    .easing(TWEEN.Easing.Back.Out.config(0.8)) 
+                    .easing(TWEEN.Easing.Back.Out) // 修复：去掉 .config
                     .start();
                 
-                // 变大
                 new TWEEN.Tween(mesh.scale)
                     .to({ x: 1, y: 1, z: 1 }, 1000)
                     .delay(delay)
-                    .easing(TWEEN.Easing.Elastic.Out)
+                    .easing(TWEEN.Easing.Elastic.Out) // 修复：去掉 .config
                     .start();
             });
 
@@ -401,14 +390,11 @@
             const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(15));
             const targetRot = camera.rotation.clone();
 
-            // 飞来
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.scale).to({ x: 3.5, y: 3.5, z: 3.5 }, 800).easing(TWEEN.Easing.Back.Out).start();
 
-            // 停留
             setTimeout(() => {
-                // 归位
                 new TWEEN.Tween(mesh.position).to({ x: currentPos.x, y: currentPos.y, z: currentPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
                 new TWEEN.Tween(mesh.rotation).to({ x: currentRot.x, y: currentRot.y, z: currentRot.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
                 new TWEEN.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, 1000).easing(TWEEN.Easing.Quadratic.InOut)
@@ -439,7 +425,6 @@
             time += 0.005;
             TWEEN.update();
             
-            // 盒子打开后，照片漂浮
             if(isBoxOpened) {
                 photoMeshes.forEach((mesh, i) => {
                     if(!mesh.userData.isInteracting && !isViewingSinglePhoto) {
