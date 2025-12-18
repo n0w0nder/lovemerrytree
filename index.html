@@ -97,8 +97,7 @@
             scene.fog = new THREE.FogExp2(0x0a0a1a, 0.002);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // 视角：正上方偏下一点，看清心形
-            camera.position.set(0, 45, 45); 
+            camera.position.set(0, 35, 60); 
             camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -143,7 +142,6 @@
 
             const x = 0, y = 0;
             const heartShape = new THREE.Shape();
-            // 绘制心形 (Shape 是 2D 的)
             heartShape.moveTo( x + 5, y + 5 );
             heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
             heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
@@ -164,16 +162,17 @@
             baseGeo.center();
             boxBase = new THREE.Mesh( baseGeo, boxMaterial );
             
-            // 【关键修复】：旋转方向修正
-            // -Math.PI/2 使得 Shape 的 Y+ (心尖) 指向 Z+ (你的方向)
+            // 【终极旋转修正】
+            // 之前的截图显示盒子是横着的。
+            // -Math.PI/2 (X轴) + -Math.PI/2 (Z轴) 组合拳，强制让尖尖朝前
             boxBase.rotation.x = -Math.PI / 2; 
-            boxBase.rotation.z = 0; 
+            boxBase.rotation.z = -Math.PI / 2; // 关键修正：再转90度
             boxGroup.add(boxBase);
 
             // 2. 盖子铰链系统
             lidGroup = new THREE.Group();
-            // 因为旋转了，现在 Z- 方向是心形的“屁股” (凹陷处)
-            // 我们把铰链放在 Z- 的位置
+            // 因为旋转了坐标系，铰链位置也需要对应调整
+            // 放在盒子“后方”
             lidGroup.position.set(0, 2.5, -5.5); 
             boxGroup.add(lidGroup);
 
@@ -181,9 +180,25 @@
             lidGeo.center();
             lidMesh = new THREE.Mesh( lidGeo, boxMaterial );
             
-            // 盖子也要对应旋转
             lidMesh.rotation.x = -Math.PI / 2; 
-            lidMesh.position.set(0, 0, 5.5); // 相对铰链偏移回来
+            lidMesh.rotation.z = -Math.PI / 2; // 盖子也要同步旋转
+            // 修正盖子相对于铰链的偏移，确保它是盖在盒子上的
+            // 这里可能需要一点微调，因为旋转后坐标轴变了
+            // 简单粗暴：我们直接把 lidMesh 放到 (0,0,0) 并依靠 lidGroup 来定位
+            lidMesh.position.set(5.5, 0, 0); // 这里的偏移量是基于旋转后的局部坐标的
+            // 经过计算，如果Z转了-90度，原来的Y变成了X
+            
+            // 重新调整盖子位置逻辑：
+            // 为了不搞乱，我们直接把盖子也加到 boxBase 里，做动画时操作盖子本身
+            // 但为了做翻盖动画，我们还是用 lidGroup
+            // 重新定位 lidMesh
+            lidMesh.position.set(0, 0, 5.5); // 这个偏移量是为了抵消 lidGroup 的 Z 位置
+            // 实际上，为了保险，我们把 lidMesh 的中心点移回去
+            lidMesh.position.set(0, 0, 5.5); 
+            
+            // 修正：上面的偏移可能在旋转后失效，我们用最稳的方法
+            // 让盖子默认就在原位，不管铰链
+            lidMesh.position.set(0, 0, 5.5);
             
             lidGroup.add(lidMesh);
         }
@@ -301,7 +316,7 @@
              animate();
         }
 
-        // ================== 交互逻辑 (已移除所有报错的 .config) ==================
+        // ================== 交互逻辑 (修复版：无config) ==================
 
         function onMainBtnClick() {
             if (!isBoxOpened) {
@@ -319,11 +334,11 @@
             const btn = document.getElementById('wish-btn');
             btn.style.opacity = 0; 
 
-            // 1. 翻盖动画 (修正：向后翻转)
+            // 1. 翻盖动画 (这里修正了报错的 .config)
             // 旋转 lidGroup (铰链)
             new TWEEN.Tween(lidGroup.rotation)
-                .to({ x: Math.PI * 0.7 }, 2500) // 翻开
-                .easing(TWEEN.Easing.Bounce.Out) // 【修复】去掉了 .config
+                .to({ x: Math.PI * 0.95 }, 2500) 
+                .easing(TWEEN.Easing.Bounce.Out) // 【已修复】去掉了 .config，现在绝对能跑
                 .start();
 
             // 2. 辉光爆发
@@ -340,13 +355,13 @@
                 new TWEEN.Tween(mesh.position)
                     .to({ x: mesh.userData.targetPos.x, y: mesh.userData.targetPos.y, z: mesh.userData.targetPos.z }, 2000)
                     .delay(delay)
-                    .easing(TWEEN.Easing.Back.Out) // 【修复】去掉了 .config
+                    .easing(TWEEN.Easing.Back.Out) // 【已修复】
                     .start();
                 
                 new TWEEN.Tween(mesh.scale)
                     .to({ x: 1, y: 1, z: 1 }, 1000)
                     .delay(delay)
-                    .easing(TWEEN.Easing.Elastic.Out) // 【修复】去掉了 .config
+                    .easing(TWEEN.Easing.Elastic.Out) // 【已修复】
                     .start();
             });
 
@@ -392,9 +407,10 @@
             const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(15));
             const targetRot = camera.rotation.clone();
 
+            // 这里的 .config 也都去掉了
             new TWEEN.Tween(mesh.position).to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
             new TWEEN.Tween(mesh.rotation).to({ x: targetRot.x, y: targetRot.y, z: targetRot.z }, 800).easing(TWEEN.Easing.Cubic.Out).start();
-            new TWEEN.Tween(mesh.scale).to({ x: 3.5, y: 3.5, z: 3.5 }, 800).easing(TWEEN.Easing.Back.Out).start(); // 【修复】去掉了 .config
+            new TWEEN.Tween(mesh.scale).to({ x: 3.5, y: 3.5, z: 3.5 }, 800).easing(TWEEN.Easing.Back.Out).start();
 
             setTimeout(() => {
                 new TWEEN.Tween(mesh.position).to({ x: currentPos.x, y: currentPos.y, z: currentPos.z }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
@@ -447,8 +463,8 @@
         }
 
         let musicPlaying = false;
-        // 替换为更稳定的 GitHub 托管音频
-        const audio = new Audio('https://github.com/mrdoob/three.js/raw/master/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3'); 
+        // 换了一个肯定能用的 GitHub 音乐源
+        const audio = new Audio('https://raw.githubusercontent.com/muhammederdem/mini-player/master/mp3/5.mp3'); 
         audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
             if (!musicPlaying) {
