@@ -20,8 +20,23 @@
         #wish-btn:hover { background: #ff0066; color: white; box-shadow: 0 0 30px rgba(255, 0, 102, 0.8); }
         #wish-btn:active { transform: scale(0.95); }
         
-        #top-msg { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.8); z-index: 10; font-size: 16px; letter-spacing: 3px; text-shadow: 0 0 10px #ff0066; font-weight: bold; }
+        /* 【新增】标题呼吸光效 */
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 10px #ff0066, 0 0 20px #ff0066; color: rgba(255,255,255,0.9); }
+            50% { text-shadow: 0 0 20px #ff0066, 0 0 40px #ff3399; color: #fff; }
+        }
+        #top-msg { 
+            position: absolute; top: 20px; width: 100%; text-align: center; 
+            color: rgba(255,255,255,0.9); z-index: 10; font-size: 18px; 
+            letter-spacing: 3px; font-weight: bold;
+            animation: titleGlow 3s ease-in-out infinite; /* 应用呼吸动画 */
+        }
+
         #music-control { position: absolute; top: 20px; right: 20px; z-index: 20; color: #ff0066; border: 1px solid #ff0066; padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer;background: rgba(0,0,0,0.3); }
+        
+        #loading { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; color: #ff0066; flex-direction: column; transition: opacity 0.8s; }
+        .loader-spinner { border: 3px solid rgba(255, 0, 102, 0.2); border-top: 3px solid #ff0066; border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 25px; box-shadow: 0 0 20px #ff0066; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         #click-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 8; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 1s; }
         .show-hint { opacity: 1 !important; }
@@ -136,6 +151,8 @@
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
+        // 用于视差效果的目标鼠标位置
+        const targetMouse = new THREE.Vector2();
 
         const uiCanvas = document.getElementById('ui-canvas');
         const uiCtx = uiCanvas.getContext('2d');
@@ -157,15 +174,17 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             const renderScene = new THREE.RenderPass(scene, camera);
-            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            // 辉光阈值稍微调高，只让最亮的地方发光
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.9);
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // 【修改点】提高环境光亮度，因为现在照片靠它照亮
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 2.0, 100);
-            pointLight.position.set(0, 20, 20);
+            const pointLight = new THREE.PointLight(0xff0066, 2.5, 150);
+            pointLight.position.set(0, 30, 30);
             scene.add(pointLight);
 
             createHeartBox(); 
@@ -208,8 +227,10 @@
             const extrudeSettings = { depth: 5, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
             const lidSettings = { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
 
-            const boxMaterial = new THREE.MeshPhysicalMaterial({ 
-                color: 0xff0066, metalness: 0.2, roughness: 0.1, transmission: 0.1, transparent: true, opacity: 0.95, side: THREE.DoubleSide
+            // 盒子也换成 Lambert 材质，质感更好
+            const boxMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xff0066, transparent: true, opacity: 0.95, side: THREE.DoubleSide,
+                emissive: 0x330011 // 微弱自发光
             });
 
             const baseGeo = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
@@ -286,9 +307,15 @@
             const aspect = texture.image ? texture.image.width / texture.image.height : 1;
             const geometry = new THREE.PlaneGeometry(baseSize, baseSize / aspect);
             const isSpecial = url.includes('love_');
-            const material = new THREE.MeshBasicMaterial({
-                map: texture, side: THREE.DoubleSide, transparent: true,
-                opacity: isSpecial || isMajor ? 1.0 : 0.9, 
+            
+            // 【核心修改】将材质改为 LambertMaterial，解决过曝问题
+            const material = new THREE.MeshLambertMaterial({
+                map: texture, 
+                side: THREE.DoubleSide, 
+                transparent: true,
+                opacity: isSpecial || isMajor ? 1.0 : 0.95,
+                emissive: 0xffffff, // 极微弱的自发光，保证暗部也有细节
+                emissiveIntensity: 0.1
             });
             const mesh = new THREE.Mesh(geometry, material);
             
@@ -334,10 +361,10 @@
             const colors = [];
             const colorObj = new THREE.Color();
 
-            for (let i = 0; i < 1000; i++) {
-                vertices.push(THREE.MathUtils.randFloatSpread(250)); 
-                vertices.push(THREE.MathUtils.randFloatSpread(250)); 
-                vertices.push(THREE.MathUtils.randFloatSpread(250)); 
+            for (let i = 0; i < 1200; i++) { // 增加粒子数量
+                vertices.push(THREE.MathUtils.randFloatSpread(300)); 
+                vertices.push(THREE.MathUtils.randFloatSpread(300)); 
+                vertices.push(THREE.MathUtils.randFloatSpread(300)); 
 
                 const colorType = Math.random();
                 if (colorType < 0.6) {
@@ -353,10 +380,10 @@
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
             const material = new THREE.PointsMaterial({ 
-                size: 0.8, 
+                size: 0.7, 
                 vertexColors: true, 
                 transparent: true, 
-                opacity: 0.7, 
+                opacity: 0.6, 
                 blending: THREE.AdditiveBlending,
                 sizeAttenuation: true
             });
@@ -394,11 +421,12 @@
                 .easing(TWEEN.Easing.Bounce.Out)
                 .start();
 
+            // 辉光强度调整
             new TWEEN.Tween(bloomPass)
-                .to({ strength: 1.5, radius: 1.2 }, 500)
+                .to({ strength: 1.8, radius: 1.0 }, 500)
                 .delay(200)
                 .easing(TWEEN.Easing.Quadratic.Out)
-                .chain(new TWEEN.Tween(bloomPass).to({ strength: 0.8, radius: 0.3 }, 2000)).start();
+                .chain(new TWEEN.Tween(bloomPass).to({ strength: 1.0, radius: 0.5 }, 2000)).start();
 
             if (majorMesh) {
                 new TWEEN.Tween(majorMesh.position)
@@ -421,7 +449,7 @@
 
                 setTimeout(() => {
                     releaseAllPhotos();
-                }, 5500); 
+                }, 6000); // 延长展示时间到6秒
             } else {
                 releaseAllPhotos();
             }
@@ -474,11 +502,16 @@
         }
 
         function onMouseMove(event) {
+            // 更新目标鼠标位置用于视差
+            targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             addUIParticles(event.clientX, event.clientY);
             updateRaycaster(event.clientX, event.clientY);
         }
         function onTouchMove(event) {
             if(event.touches.length > 0) {
+                targetMouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                targetMouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
                 addUIParticles(event.touches[0].clientX, event.touches[0].clientY);
                 updateRaycaster(event.touches[0].clientX, event.touches[0].clientY);
             }
@@ -505,7 +538,7 @@
             const currentPos = mesh.position.clone();
             const currentRot = mesh.rotation.clone();
             const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(25)); 
-            targetPos.y += 12; // 强行拉高照片位置
+            targetPos.y += 12; 
 
             const targetRot = camera.rotation.clone();
 
@@ -545,12 +578,20 @@
             TWEEN.update();
             
             if (particlesMesh) {
-                particlesMesh.rotation.y += 0.0005;
+                // 背景粒子自转
+                particlesMesh.rotation.y += 0.0003;
+                // 【新增】背景粒子鼠标视差效果
+                particlesMesh.position.x += (targetMouse.x * 5 - particlesMesh.position.x) * 0.02;
+                particlesMesh.position.y += (targetMouse.y * 5 - particlesMesh.position.y) * 0.02;
             }
 
             if(isBoxOpened) {
                 photoMeshes.forEach((mesh, i) => {
-                    if (mesh === majorMesh && !photoMeshes.includes(majorMesh)) return; 
+                    // 【新增】主角照片在展示期间缓慢自转
+                    if (mesh === majorMesh && !photoMeshes.includes(majorMesh)) {
+                         mesh.rotation.y += 0.004;
+                         return;
+                    }
 
                     if(!mesh.userData.isInteracting && !isViewingSinglePhoto) {
                         mesh.position.y += Math.sin(time + i) * 0.02; 
@@ -570,7 +611,6 @@
         }
 
         let musicPlaying = false;
-        // 请确保下载了mp3并命名为 love_story.mp3 放在同目录下
         const audio = new Audio('love_story.mp3'); 
         audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
