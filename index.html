@@ -37,41 +37,44 @@
         .loader-spinner { border: 3px solid rgba(255, 0, 102, 0.2); border-top: 3px solid #ff0066; border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 25px; box-shadow: 0 0 20px #ff0066; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        #click-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); z-index: 8; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 1s; }
-        .show-hint { opacity: 1 !important; }
-        .hide-hint { opacity: 0 !important; }
+        /* 删除了 click-hint 的样式 */
 
         #letter-modal {
             display: none;
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 9999;
+            background: rgba(0,0,0,0.8); z-index: 9999;
             justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
         }
         #letter-content {
-            background: rgba(20, 0, 10, 0.9);
-            border: 2px solid #ff0066;
-            box-shadow: 0 0 30px rgba(255, 0, 102, 0.5);
+            background: linear-gradient(135deg, rgba(20, 0, 10, 0.9), rgba(40, 0, 20, 0.95));
+            border: 1px solid #ff0066;
+            box-shadow: 0 0 50px rgba(255, 0, 102, 0.4);
             padding: 40px;
-            border-radius: 20px;
-            max-width: 80%;
-            max-height: 70%;
+            border-radius: 15px;
+            max-width: 85%;
+            max-height: 75%;
+            width: 500px;
             overflow-y: auto;
-            text-align: center;
+            text-align: left; /* 信件内容左对齐更好看 */
             color: #fff;
             position: relative;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         #letter-text {
-            font-size: 18px; line-height: 1.8; letter-spacing: 1px; white-space: pre-line;
-            margin-bottom: 20px;
+            font-size: 16px; line-height: 1.8; letter-spacing: 1px; white-space: pre-line;
+            margin-bottom: 30px; min-height: 100px;
+            font-family: 'KaiTi', 'Microsoft YaHei', serif; /* 尝试用楷体，更有信纸感觉 */
+            text-shadow: 0 0 2px rgba(255,0,102,0.3);
         }
         #close-letter {
-            background: #ff0066; border: none; color: white; padding: 8px 20px;
-            border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 10px;
+            background: transparent; border: 1px solid #ff0066; color: #ff0066; padding: 8px 25px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; margin: 0 auto; display: block;
+            transition: all 0.3s;
         }
+        #close-letter:hover { background: #ff0066; color: white; }
     </style>
 </head>
 <body>
@@ -81,30 +84,12 @@
         <div id="load-progress" style="font-size: 12px; color: #666; margin-top: 15px; font-family: monospace;">LOADING: 0%</div>
     </div>
 
-    <div id="top-msg">✨ 家宝和宝宝 / Since 2025.9.12 / 百日纪念 ✨</div>
+    <div id="top-msg">✨ 家宝 ❤️ 宝宝 / Since 2025.9.12 / 100 Days ✨</div>
     <div id="music-control">🎵 Music Off</div>
-    <div id="click-hint">💡 点击任意一张照片查看详情</div>
-    
     <div id="letter-modal">
         <div id="letter-content">
-            <h2 style="color: #ff0066; margin-top: 0;">致 我的家宝 ❤️</h2>
-            <div id="letter-text">
-                亲爱的家宝：
-                
-                这首歌是《将故事写成我们》，
-                也是我想对你做的事。
-                
-                这里是我们的一百天纪念。
-                每一张照片，都是我们珍贵的回忆。
-                做这个盒子，是想把这些瞬间永远保存下来。
-                
-                在这个虚拟的宇宙里，
-                我的爱意会像这些星辰一样，
-                永远围绕着你。
-                
-                百日快乐，爱你！
-            </div>
-            <button id="close-letter">💌 收起信件</button>
+            <h2 style="color: #ff0066; text-align: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,0,102,0.3); padding-bottom: 10px;">致 亲爱的家宝</h2>
+            <div id="letter-text"></div> <button id="close-letter">收好信件 ❤️</button>
         </div>
     </div>
 
@@ -125,17 +110,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 
     <script>
-        const baseText = "Since 2025.9.12"; 
         const majorPhoto = 'lovemajor.jpg'; 
         const chatImages = [
             'chat01.jpg', 'chat02.jpg', 'chat04.jpg', 'chat05.jpg', 'chat07.jpg',
             'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
             'chat13.jpg', 'chat14.jpg', 'chat15.jpg', 'chat16.jpg', 'chat17.jpg',
             'chat18.jpg', 'chat19.jpg', 'chat20.jpg',
-            // 【新增】新的6张照片
+            // 新增照片
             'chat21.jpg', 'chat22.jpg', 'chat23.jpg', 'chat24.jpg', 'chat25.jpg', 'chat26.jpg',
             'love_1.jpg', 'love_2.jpg' 
         ];
+
+        // 你的情书内容 (换行请用 \n)
+        const letterContent = `
+亲爱的家宝：
+
+《交换余生》
+
+云等风 人等梦 爱辗过时光等什么
+记不住 认不出 泪眼中谁一样脸红
+等你说 等我说 一等就是一个宇宙
+
+虽然我们相隔两地，
+但就像歌里唱的一样，
+“交换余生，是我非你不可”。
+
+我们的第100天。
+每一张照片，都是我们珍贵的回忆。
+做心盒，是想把这些瞬间永远保存下来。
+
+在这个为你创造的专属时空里，
+我的爱意会像这些星辰一样，
+永远围绕着你。
+
+百日快乐，等我奔向你。
+             FTOM：
+              宝宝
+`;
 
         let scene, camera, renderer, composer, bloomPass;
         let boxGroup, boxBase, lidGroup, lidMesh;
@@ -179,10 +190,9 @@
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
-            // 【修改】回归基础灯光，因为现在主要靠材质本身发色
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 2.0, 150);
+            const pointLight = new THREE.PointLight(0xff0066, 2.5, 150);
             pointLight.position.set(0, 30, 30);
             scene.add(pointLight);
 
@@ -192,6 +202,7 @@
 
             window.addEventListener('resize', onWindowResize);
             document.getElementById('wish-btn').addEventListener('click', onMainBtnClick);
+            
             document.getElementById('close-letter').addEventListener('click', () => {
                 document.getElementById('letter-modal').style.display = 'none';
             });
@@ -207,6 +218,27 @@
             uiCanvas.width = window.innerWidth;
             uiCanvas.height = window.innerHeight;
         }
+
+        // ================== 打字机效果函数 ==================
+        function typeWriter(text, elementId, speed = 50) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    // 处理换行符
+                    if (text.charAt(i) === '\n') {
+                        element.innerHTML += '<br>';
+                    } else {
+                        element.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+        // ==================================================
 
         function createHeartBox() {
             boxGroup = new THREE.Group();
@@ -226,7 +258,7 @@
             const extrudeSettings = { depth: 5, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
             const lidSettings = { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
 
-            // 【核心修改】盒子材质改回 BasicMaterial，不受光照影响，恢复通透粉色
+            // 【回归】使用 BasicMaterial，不受光照影响，保证颜色纯正鲜艳
             const boxMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xff0066, 
                 transparent: true, 
@@ -309,12 +341,11 @@
             const geometry = new THREE.PlaneGeometry(baseSize, baseSize / aspect);
             const isSpecial = url.includes('love_');
             
-            // 【核心修改】照片材质改回 BasicMaterial，不受光照影响，清晰明亮
+            // 【回归】照片使用 BasicMaterial，清晰明亮，不受灯光干扰
             const material = new THREE.MeshBasicMaterial({
                 map: texture, 
                 side: THREE.DoubleSide, 
                 transparent: true,
-                // 普通照片透明度稍微调低，防止过曝，主角照片保持全光
                 opacity: isSpecial || isMajor ? 1.0 : 0.9,
             });
             const mesh = new THREE.Mesh(geometry, material);
@@ -404,7 +435,11 @@
             if (!isBoxOpened) {
                 openBox();
             } else {
-                document.getElementById('letter-modal').style.display = 'flex';
+                // 打开信件弹窗
+                const modal = document.getElementById('letter-modal');
+                modal.style.display = 'flex';
+                // 触发打字机效果
+                typeWriter(letterContent.trim(), 'letter-text', 100);
             }
         }
 
@@ -493,10 +528,10 @@
             });
 
             setTimeout(() => {
-                document.getElementById('click-hint').classList.add('show-hint');
                 const btn = document.getElementById('wish-btn');
                 btn.innerText = "✨ 家宝 ❤️ 宝宝 ✨";
                 btn.style.opacity = 1;
+                // 注意：这里删除了显示 click-hint 的逻辑
             }, 2000);
         }
 
@@ -531,8 +566,7 @@
         function highlightSinglePhoto(mesh) {
             isViewingSinglePhoto = true; 
             mesh.userData.isInteracting = true; 
-            document.getElementById('click-hint').classList.add('hide-hint');
-
+            
             const currentPos = mesh.position.clone();
             const currentRot = mesh.rotation.clone();
             const targetPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(25)); 
@@ -606,7 +640,7 @@
         }
 
         let musicPlaying = false;
-        // 请确保下载了 love_story.mp3 放在同目录下
+        // 记得确认你的音乐文件名是 exchange.mp3
         const audio = new Audio('love_story.mp3'); 
         audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
