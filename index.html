@@ -132,6 +132,8 @@
             'chat08.jpg', 'chat09.jpg', 'chat10.jpg', 'chat11.jpg', 'chat12.jpg',
             'chat13.jpg', 'chat14.jpg', 'chat15.jpg', 'chat16.jpg', 'chat17.jpg',
             'chat18.jpg', 'chat19.jpg', 'chat20.jpg',
+            // 【新增】新的6张照片
+            'chat21.jpg', 'chat22.jpg', 'chat23.jpg', 'chat24.jpg', 'chat25.jpg', 'chat26.jpg',
             'love_1.jpg', 'love_2.jpg' 
         ];
 
@@ -172,14 +174,15 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             const renderScene = new THREE.RenderPass(scene, camera);
-            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.9);
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            // 【修改】回归基础灯光，因为现在主要靠材质本身发色
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const pointLight = new THREE.PointLight(0xff0066, 2.5, 150);
+            const pointLight = new THREE.PointLight(0xff0066, 2.0, 150);
             pointLight.position.set(0, 30, 30);
             scene.add(pointLight);
 
@@ -223,12 +226,9 @@
             const extrudeSettings = { depth: 5, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
             const lidSettings = { depth: 1, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 0.5, bevelThickness: 0.5 };
 
-            // 【核心修正】盒子材质改回水晶质感 (PhysicalMaterial)，解决“诡异颜色”问题
-            const boxMaterial = new THREE.MeshPhysicalMaterial({ 
+            // 【核心修改】盒子材质改回 BasicMaterial，不受光照影响，恢复通透粉色
+            const boxMaterial = new THREE.MeshBasicMaterial({ 
                 color: 0xff0066, 
-                metalness: 0.1, 
-                roughness: 0.2, 
-                transmission: 0.5, // 半透明玻璃感
                 transparent: true, 
                 opacity: 0.9, 
                 side: THREE.DoubleSide
@@ -309,14 +309,13 @@
             const geometry = new THREE.PlaneGeometry(baseSize, baseSize / aspect);
             const isSpecial = url.includes('love_');
             
-            // 【保持】照片继续使用 Lambert 材质，因为这个效果你觉得很棒
-            const material = new THREE.MeshLambertMaterial({
+            // 【核心修改】照片材质改回 BasicMaterial，不受光照影响，清晰明亮
+            const material = new THREE.MeshBasicMaterial({
                 map: texture, 
                 side: THREE.DoubleSide, 
                 transparent: true,
-                opacity: isSpecial || isMajor ? 1.0 : 0.95,
-                emissive: 0xffffff, 
-                emissiveIntensity: 0.1
+                // 普通照片透明度稍微调低，防止过曝，主角照片保持全光
+                opacity: isSpecial || isMajor ? 1.0 : 0.9,
             });
             const mesh = new THREE.Mesh(geometry, material);
             
@@ -607,6 +606,7 @@
         }
 
         let musicPlaying = false;
+        // 请确保下载了 love_story.mp3 放在同目录下
         const audio = new Audio('love_story.mp3'); 
         audio.loop = true; audio.volume = 0.6;
         document.getElementById('music-control').addEventListener('click', function() {
