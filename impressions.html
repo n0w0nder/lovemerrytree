@@ -9,13 +9,16 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: transparent;
+            background: transparent; /* 透出 index 的底色 */
             padding: 20px;
             font-family: 'PingFang SC', sans-serif;
             overflow-y: auto;
         }
+        
+        /* 隐藏滚动条 */
         ::-webkit-scrollbar { display: none; }
 
+        /* === 顶部栏 === */
         .header-bar {
             display: flex;
             justify-content: space-between;
@@ -31,6 +34,7 @@
             letter-spacing: 2px;
         }
 
+        /* 上传按钮 */
         .upload-btn {
             background: rgba(255, 255, 255, 0.9);
             border: none;
@@ -41,11 +45,19 @@
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: all 0.3s;
-            display: flex; align-items: center; gap: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
-        .upload-btn:hover { background: #fff; transform: translateY(-2px); color: #66a6ff; }
+        .upload-btn:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            color: #66a6ff;
+        }
+        /* 隐藏的文件输入框 */
         #file-input { display: none; }
 
+        /* === 照片墙网格 === */
         .photo-wall {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -63,16 +75,36 @@
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(5px);
             border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
             cursor: pointer;
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             animation: fadeUp 0.6s backwards;
         }
-        .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
-        .photo-item:hover { transform: translateY(-8px); border-color: #fff; z-index: 10; }
+
+        .photo-item img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            border-color: #fff;
+            z-index: 10;
+        }
         .photo-item:hover img { transform: scale(1.1); }
 
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        #loading-tip { text-align: center; color: rgba(255,255,255,0.8); font-size: 14px; width: 100%; margin-top: 50px; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 加载提示 */
+        #loading-tip {
+            text-align: center; color: rgba(255,255,255,0.8);
+            font-size: 14px; width: 100%; margin-top: 50px;
+        }
+
     </style>
 </head>
 <body>
@@ -86,11 +118,13 @@
     </div>
 
     <div class="photo-wall" id="gallery"></div>
-    <div id="loading-tip">正在加载云端相册...</div>
+    <div id="loading-tip">正在连接云端相册...</div>
 
 <script>
     // ==========================================
-    // 👇 还是填刚才那一套钥匙 (URL 和 Key) 👇
+    // 👇 请务必仔细检查这里的配置 👇
+    // 1. 确保引号是英文单引号 ' 不是中文的 ‘
+    // 2. 确保 Key 里面没有空格
     // ==========================================
     const SUPABASE_URL = 'https://nnyorzfnhikhwcyyqrcm.supabase.co'; 
     const SUPABASE_KEY = 'sb_publishable_u6XDQS29-S3rhe7lvremXw__uezkiXc'; 
@@ -99,10 +133,10 @@
     const { createClient } = supabase;
     const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 桶的名字 (如果你在Storage里建的是 'photos' 就改这里)
+    // 桶的名字 (默认 album，如果你的叫 photos 请修改这里)
     const BUCKET_NAME = 'album'; 
 
-    // 1. 直接读取存储桶里的所有文件 (无需数据库表)
+    // 1. 获取照片 (直接读桶，不需要数据库表)
     async function fetchPhotos() {
         const { data, error } = await _supabase
             .storage
@@ -117,20 +151,22 @@
         const tip = document.getElementById('loading-tip');
 
         if (error) {
-            console.error(error);
-            tip.innerText = '加载失败，可能是桶名称不对或权限未开';
+            console.error('加载错误:', error);
+            // 如果报错，可能是桶名字不对，或者 key 填错了
+            tip.innerText = '加载失败 (请按F12看控制台报错)';
             return;
         }
 
-        gallery.innerHTML = '';
+        gallery.innerHTML = ''; // 清空
         
-        // 过滤掉系统自动生成的 .emptyFolderPlaceholder 文件
+        // 过滤掉系统自带的隐藏文件
         const photos = data.filter(item => item.name !== '.emptyFolderPlaceholder');
 
         if (photos.length === 0) {
-            tip.innerText = '相册是空的，快上传第一张吧！';
+            tip.innerText = '相册是空的，快去上传第一张吧！';
         } else {
             tip.style.display = 'none';
+            
             photos.forEach((item, index) => {
                 // 获取每张图的公开链接
                 const { data: { publicUrl } } = _supabase
@@ -140,14 +176,14 @@
 
                 const div = document.createElement('div');
                 div.className = 'photo-item';
-                div.style.animationDelay = `${index * 0.05}s`;
+                div.style.animationDelay = `${index * 0.05}s`; // 瀑布流动画
                 div.innerHTML = `<img src="${publicUrl}" loading="lazy">`;
                 gallery.appendChild(div);
             });
         }
     }
 
-    // 2. 上传逻辑 (只传文件，不写库)
+    // 2. 处理上传 (修复版：自动重命名防止报错)
     async function handleUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -158,32 +194,43 @@
         btn.style.opacity = 0.7;
 
         try {
-            // 生成唯一文件名
+            // === 关键修复步骤 ===
+            // 不管原文件名是什么中文/符号，全部重命名为纯英文
+            // 格式：时间戳_随机码.后缀
             const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const safeFileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
             
+            // 创建一个新的 File 对象，强制使用安全的文件名
+            // 这样浏览器就不会报 "non ISO-8859-1" 错误了
+            const newFile = new File([file], safeFileName, { type: file.type });
+
             // 上传
             const { error: uploadError } = await _supabase.storage
                 .from(BUCKET_NAME)
-                .upload(fileName, file);
+                .upload(safeFileName, newFile);
 
             if (uploadError) throw uploadError;
 
+            // 成功
             alert('上传成功！✨');
-            // 稍等一下再刷新，因为云存储有时候有1秒延迟
+            
+            // 延迟一点点刷新，确保云端同步完成
             setTimeout(fetchPhotos, 1000);
 
         } catch (error) {
-            console.error(error);
+            console.error('上传错误:', error);
             alert('上传失败：' + error.message);
         } finally {
+            // 恢复按钮状态
             btn.innerHTML = originalText;
             btn.style.opacity = 1;
             document.getElementById('file-input').value = '';
         }
     }
 
+    // 初始化加载
     fetchPhotos();
+
 </script>
 </body>
 </html>
