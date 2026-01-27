@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impressions</title>
+    <style>
+        :root {
+            --glass-card: rgba(255, 255, 255, 0.85);
+            --text-color: #555;
+            --blue-shadow: rgba(142, 197, 252, 0.4);
+            --pink-shadow: rgba(255, 154, 158, 0.4);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            /* 背景透明，透出主页的渐变 */
+            background: transparent;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            padding: 20px;
+            overflow-y: auto; /* 允许滚动 */
+        }
+
+        /* 隐藏滚动条但允许滚动 */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        /* 标题区 */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+        .header h2 {
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        .header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
+
+        /* 照片墙容器 */
+        .gallery-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            padding-bottom: 50px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 拍立得卡片 */
+        .polaroid {
+            background: var(--glass-card);
+            padding: 15px 15px 40px 15px; /* 底部留白给文字 */
+            border-radius: 4px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            width: 220px;
+            position: relative;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            animation: floatIn 0.8s backwards;
+        }
+
+        /* 照片本身 */
+        .photo-frame {
+            width: 100%;
+            height: 220px;
+            background-color: #eee;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        /* 手写字备注 */
+        .caption {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'Comic Sans MS', 'KaiTi', cursive; /* 手写字体回退 */
+            font-size: 14px;
+            color: #666;
+            letter-spacing: 1px;
+        }
+
+        /* 📌 钉子装饰 (可选) */
+        .pin {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            top: -6px; left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        /* 蓝色钉子 */
+        .pin.blue { background: #8ec5fc; }
+        /* 粉色钉子 */
+        .pin.pink { background: #ff9a9e; }
+
+        /* === 悬停特效 === */
+        .polaroid:hover {
+            transform: scale(1.05) rotate(0deg) !important; /* 悬停时摆正 */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+        .polaroid:hover img {
+            transform: scale(1.1); /* 照片微放大 */
+        }
+
+        /* === 动画定义 === */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatIn { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .polaroid { width: 45%; padding: 10px 10px 30px 10px; }
+            .photo-frame { height: 150px; }
+            .caption { font-size: 12px; }
+            .gallery-container { gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>IMPRESSIONS</h2>
+        <p>定格我们的每一个心动瞬间</p>
+    </div>
+
+    <div class="gallery-container">
+        
+        <div class="polaroid" style="transform: rotate(-3deg);">
+            <div class="pin blue"></div>
+            <div class="photo-frame">
+                <img src="chat01.jpg" alt="Memory">
+            </div>
+            <div class="caption">初次见面</div>
+        </div>
+
+        <div class="polaroid" style="transform: rotate(2deg); animation-delay: 0.1s;">
+            <div class="pin pink"></div>
+            <div class="photo-frame">
+                <img src="lovemajor.jpg" alt="Memory">
+            </div>
+            <div class="caption">最好的我们</div>
+        </div>
+
+        <div class="polaroid" style="transform: rotate(-1deg); animation-delay: 0.2s;">
+            <div class="pin blue"></div>
+            <div class="photo-frame">
+                <img src="chat05.jpg" alt="Memory">
+            </div>
+            <div class="caption">傻瓜宝宝</div>
+        </div>
+
+        <div class="polaroid" style="transform: rotate(3deg); animation-delay: 0.3s;">
+            <div class="pin pink"></div>
+            <div class="photo-frame">
+                <img src="chat12.jpg" alt="Memory">
+            </div>
+            <div class="caption">一起去的地方</div>
+        </div>
+
+        <div class="polaroid" style="transform: rotate(-2deg); animation-delay: 0.4s;">
+            <div class="pin blue"></div>
+            <div class="photo-frame">
+                <img src="chat26.jpg" alt="Memory">
+            </div>
+            <div class="caption">聊天记录</div>
+        </div>
+
+        <div class="polaroid" style="transform: rotate(2deg); animation-delay: 0.5s;">
+            <div class="pin pink"></div>
+            <div class="photo-frame">
+                <img src="love_1.jpg" alt="Memory">
+            </div>
+            <div class="caption">Love Story</div>
+        </div>
+
+    </div>
+
+</body>
+</html>
