@@ -138,7 +138,7 @@
         <div class="card blue-card">
             <div class="edit-btn" onclick="openEditor('宝宝')">✎ 编辑</div>
             <div class="card-header">
-                <div class="avatar-small" style="background-image: url('chat26.jpg');"></div>
+                <div class="avatar-small" style="background-image: url('m1.jpg');"></div>
                 <span class="name-tag">宝宝的心里话</span>
             </div>
             <div class="msg-list" id="list-宝宝">
@@ -149,8 +149,8 @@
         <div class="card pink-card">
             <div class="edit-btn" onclick="openEditor('家宝')">✎ 编辑</div>
             <div class="card-header">
-                <div class="avatar-small" style="background-image: url('lovemajor.jpg');"></div>
-                <span class="name-tag">家宝的回应</span>
+                <div class="avatar-small" style="background-image: url('m2.jpg');"></div>
+                <span class="name-tag">家宝的心里话</span>
             </div>
             <div class="msg-list" id="list-家宝">
                 <div style="padding:20px; text-align:center; opacity:0.6; font-size:13px;">正在连接云端...</div>
@@ -172,10 +172,10 @@
 
 <script>
     // ==========================================
-    // 👇👇👇 这里的两行代码，请填入你在 Supabase 复制的钥匙 👇👇👇
+    // 👇 这里的钥匙还是填你之前的那一对，不需要变 👇
     // ==========================================
     const SUPABASE_URL = 'https://nnyorzfnhikhwcyyqrcm.supabase.co'; 
-    const SUPABASE_KEY = 'sb_publishable_u6XDQS29-S3rhe7lvremXw__uezkiXc'; 
+    const SUPABASE_KEY = 'sb_publishable_u6XDQS29...'; // 填你 API Key 里那一长串
     // ==========================================
 
     // 初始化 Supabase
@@ -193,8 +193,7 @@
 
         if (error) {
             console.error('Error:', error);
-            // 如果连接失败，显示提示（防止页面空白）
-            document.getElementById('list-宝宝').innerHTML = '<div style="color:red;padding:10px;font-size:12px">连接失败，请检查URL和Key</div>';
+            document.getElementById('list-宝宝').innerHTML = '<div style="color:red;padding:10px;font-size:12px">连接失败，请检查配置</div>';
             return;
         }
 
@@ -215,7 +214,6 @@
             const author = item.author;
             let contentArray = [];
             
-            // 尝试解析 JSON，如果之前存的是纯文本也能兼容
             try {
                 contentArray = JSON.parse(item.content);
             } catch(e) {
@@ -224,13 +222,11 @@
             
             const listEl = document.getElementById(`list-${author}`);
             if (listEl) {
-                // 如果是第一次渲染这个人的列表（且之前是空提示），先清空提示
                 if (listEl.innerHTML.includes('暂时还没有内容')) listEl.innerHTML = '';
                 
                 contentArray.forEach((text, index) => {
                     const div = document.createElement('div');
                     div.className = 'msg-item';
-                    // 给每条消息加个序号，看起来更正式
                     div.innerHTML = `<span style="font-weight:bold; opacity:0.3; margin-right:8px; font-family:Helvetica;">${String(index+1).padStart(2,'0')}</span>${text}`;
                     listEl.appendChild(div);
                 });
@@ -243,40 +239,36 @@
         currentEditingAuthor = author;
         document.getElementById('modal-title').innerText = `编辑：${author}的心里话`;
         
-        // 尝试去读取已有的内容填入输入框，方便修改
         const { data } = await _supabase
             .from('talk')
             .select('content')
             .eq('author', author)
-            .single(); // 只取一条
+            .single();
 
         const textarea = document.getElementById('text-input');
         if (data && data.content) {
             try {
-                // 把数组转回换行符分隔的文本
                 const arr = JSON.parse(data.content);
                 textarea.value = arr.join('\n');
             } catch (e) {
                 textarea.value = data.content;
             }
         } else {
-            textarea.value = ''; // 如果没有记录，清空
+            textarea.value = '';
         }
 
         document.getElementById('editor-modal').style.display = 'flex';
     }
 
-    // 3. 关闭编辑器
     function closeEditor() {
         document.getElementById('editor-modal').style.display = 'none';
     }
 
-    // 4. 保存数据
+    // 3. 保存数据
     async function saveData() {
         const rawText = document.getElementById('text-input').value;
         if (!rawText.trim()) return alert('内容不能为空哦~');
         
-        // 把输入框的内容按回车分割成数组，并过滤掉空行
         const contentArray = rawText.split('\n').filter(t => t.trim() !== '');
         
         const saveBtn = document.querySelector('.save-btn');
@@ -284,45 +276,34 @@
         saveBtn.innerText = '⏳ 同步中...';
 
         try {
-            // 先检查这个人是不是已经在数据库里了
             const { data: existing } = await _supabase
                 .from('talk')
                 .select('id')
                 .eq('author', currentEditingAuthor)
                 .single();
 
-            let result;
             const jsonContent = JSON.stringify(contentArray);
+            let result;
 
             if (existing) {
-                // 如果有，就更新 (Update)
-                result = await _supabase
-                    .from('talk')
-                    .update({ content: jsonContent })
-                    .eq('author', currentEditingAuthor);
+                result = await _supabase.from('talk').update({ content: jsonContent }).eq('author', currentEditingAuthor);
             } else {
-                // 如果没有，就新建 (Insert)
-                result = await _supabase
-                    .from('talk')
-                    .insert([{ author: currentEditingAuthor, content: jsonContent }]);
+                result = await _supabase.from('talk').insert([{ author: currentEditingAuthor, content: jsonContent }]);
             }
 
             if (result.error) throw result.error;
 
-            // 成功后
             alert('同步成功！刷新看看吧~');
             closeEditor();
-            fetchData(); // 重新拉取最新数据
+            fetchData();
             
         } catch (error) {
             alert('保存失败：' + error.message);
-            console.error(error);
         } finally {
             saveBtn.innerText = originalText;
         }
     }
 
-    // 页面加载完毕自动拉取数据
     fetchData();
 
 </script>
