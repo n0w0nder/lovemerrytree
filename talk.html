@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart to Heart</title>
+    <style>
+        :root {
+            --blue-soft: #e0c3fc;
+            --blue-deep: #8ec5fc;
+            --pink-soft: #ffd1ff;
+            --pink-deep: #fad0c4;
+            --text-main: #555;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: rgba(255, 255, 255, 0.4); /* 透明背景，透出 index 的底色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        /* === 卡片通用样式 === */
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.9);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        .card-header {
+            display: flex; align-items: center; margin-bottom: 20px;
+            padding-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.1);
+        }
+        .avatar-small {
+            width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;
+            background-size: cover; background-position: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .name-tag { font-weight: bold; font-size: 16px; }
+        .date-tag { margin-left: auto; font-size: 12px; color: #999; }
+
+        /* === 你的心里话 (左侧/上方) === */
+        .my-section .name-tag { color: #66a6ff; }
+        .my-section .avatar-small { background-image: url('chat26.jpg'); border: 2px solid #8ec5fc; }
+        
+        .message-list { list-style: none; padding: 0; }
+        .message-item {
+            background: linear-gradient(to right, #f6f9fc, #ffffff);
+            border-left: 4px solid #8ec5fc;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0 10px 10px 0;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #444;
+        }
+        .highlight { color: #66a6ff; font-weight: bold; margin-right: 5px; }
+
+        /* === 她的位置 (右侧/下方) === */
+        .her-section .name-tag { color: #ff9a9e; }
+        .her-section .avatar-small { background-image: url('lovemajor.jpg'); border: 2px solid #ff9a9e; }
+        
+        .placeholder-box {
+            border: 2px dashed #ff9a9e;
+            background: rgba(255, 154, 158, 0.05);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #ff9a9e;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+        .placeholder-icon { font-size: 30px; margin-bottom: 10px; opacity: 0.6; }
+
+        @media (min-width: 768px) {
+            .container { grid-template-columns: 1fr 1fr; align-items: start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card my-section">
+            <div class="card-header">
+                <div class="avatar-small"></div>
+                <span class="name-tag">宝宝的心里话</span>
+                <span class="date-tag">To 家宝</span>
+            </div>
+            <ul class="message-list">
+                <li class="message-item">
+                    <span class="highlight">01.</span> 
+                    大胆地骚扰我，不要觉得是打扰。我很爱你，所以我想知道你每天经历了什么，心情怎么样。对我畅所欲言吧，我要做你列表里的<b>第一顺位倾诉对象</b>。
+                </li>
+                <li class="message-item">
+                    <span class="highlight">02.</span> 
+                    我们之间<b>不藏着话</b>。有什么想法或者小情绪，咱们立马说出来，问题绝不过夜，让我们共同解决它。
+                </li>
+                <li class="message-item">
+                    <span class="highlight">03.</span> 
+                    <b>不要和其他小男生说太多话！</b>我会吃醋的，真的会吃醋的！(委屈巴巴.jpg)
+                </li>
+            </ul>
+        </div>
+
+        <div class="card her-section">
+            <div class="card-header">
+                <div class="avatar-small"></div>
+                <span class="name-tag">家宝的回应</span>
+                <span class="date-tag">Waiting...</span>
+            </div>
+            
+            <div class="placeholder-box">
+                <span class="placeholder-icon">💌</span>
+                <p>这里留给家宝写下想对我说的话...</p>
+                <p style="font-size: 12px; opacity: 0.7;">( 此处虚位以待 )</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
