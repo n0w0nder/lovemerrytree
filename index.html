@@ -3,231 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家宝 & 宝宝 | Secret Space</title>
+    <title>Dashboard</title>
     <style>
-        /* === 全局重置 === */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            background-color: #0d1117; /* GitHub Dark 背景色 */
-            color: #c9d1d9; /* GitHub 文字色 */
+        /* === 1. 核心基础设定 === */
+        :root {
+            --blue: #00f2ff; /* 赛博蓝 */
+            --pink: #ff0066; /* 霓虹粉 */
+            --bg: #0d1117;   /* 深空黑 */
+            --glass: rgba(22, 27, 34, 0.8);
+        }
+
+        body {
+            margin: 0;
             height: 100vh;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
+            /* 背景网格特效 */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
-        /* === 左侧侧边栏 (Sidebar) === */
-        .sidebar {
-            width: 280px;
-            background-color: #161b22; /* GitHub 侧边栏色 */
-            border-right: 1px solid #30363d;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            flex-shrink: 0;
-            transition: width 0.3s;
-        }
-
-        /* 头像区域 */
-        .profile {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #30363d;
-        }
-        .avatar {
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            background: #ff0066; /* 你的头像背景 */
-            margin-right: 12px;
-            border: 2px solid #30363d;
-            background-image: url('chat26.jpg'); /* 你的头像 */
-            background-size: cover;
-        }
-        .profile-info h3 { font-size: 16px; color: #e6edf3; }
-        .profile-info p { font-size: 12px; color: #8b949e; }
-
-        /* 菜单列表 */
-        .nav-menu { list-style: none; flex-grow: 1; }
-        .nav-item { margin-bottom: 4px; }
-        
-        .nav-btn {
-            width: 100%;
-            text-align: left;
-            background: none;
-            border: none;
-            padding: 10px 16px;
-            color: #c9d1d9;
-            font-size: 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: all 0.2s;
-        }
-        
-        /* 选中状态 & 悬停状态 */
-        .nav-btn:hover { background-color: #21262d; }
-        .nav-btn.active { 
-            background-color: #1f6feb; /* GitHub 蓝色高亮 */
-            color: #ffffff;
-            font-weight: bold;
-        }
-        /* 特殊高亮给心形盒子 */
-        .nav-btn.special.active { background-color: #ff0066; border: 1px solid #ff0066; }
-
-        .icon { margin-right: 10px; width: 16px; text-align: center; }
-
-        /* 音乐播放器区域 (固定在左下角) */
-        .music-player {
-            margin-top: auto;
-            padding: 15px;
-            background: #21262d;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-        }
-        .music-info { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
-        .music-controls { display: flex; gap: 10px; }
-        .control-btn {
-            background: #30363d; border: none; color: #c9d1d9;
-            padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
-            flex: 1;
-        }
-        .control-btn:hover { background: #8b949e; color: white; }
-        .playing-indicator { color: #ff0066; font-weight: bold; font-size: 12px; display: none; }
-
-        /* === 右侧内容区 (Main Content) === */
-        .main-content {
-            flex-grow: 1;
-            background-color: #0d1117;
+        /* === 2. 主容器：玻璃拟态 === */
+        .dashboard-container {
+            width: 90%;
+            max-width: 1000px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             position: relative;
+            animation: fadeIn 1s ease-out;
         }
 
-        /* iframe 容器 */
-        #app-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
+        /* === 3. 顶部 ID 卡片区域 === */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar-circle {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; font-weight: bold;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* 张亦宸 - 蓝方 */
+        .blue-side .avatar-circle {
+            border: 3px solid var(--blue);
+            color: var(--blue);
+            text-shadow: 0 0 10px var(--blue);
+        }
+        .blue-side h2 { margin: 0; font-size: 24px; color: var(--blue); text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+        .blue-side p { margin: 0; font-size: 12px; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+
+        /* 杨沁宜 - 粉方 */
+        .pink-side .avatar-circle {
+            border: 3px solid var(--pink);
+            color: var(--pink);
+            text-shadow: 0 0 10px var(--pink);
+        }
+        .pink-side h2 { margin: 0; font-size: 24px; color: var(--pink); text-shadow: 0 0 10px rgba(255, 0, 102, 0.5); }
+        .pink-side p { margin: 0; font-size: 12px; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-align: right; }
+
+        /* 中间连接符 */
+        .connector {
+            font-size: 30px;
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(to right, var(--blue), var(--pink));
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        /* === 4. 数据仪表盘区域 === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+
+        /* 蓝色卡片 - 相识 */
+        .stat-card.blue { border-left: 4px solid var(--blue); }
+        .stat-card.blue::after {
+            content: ''; position: absolute; top:0; left:0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, rgba(0, 242, 255, 0.05), transparent);
+            pointer-events: none;
+        }
+
+        /* 粉色卡片 - 相恋 */
+        .stat-card.pink { border-left: 4px solid var(--pink); }
+        .stat-card.pink::after {
+            content: ''; position: absolute; top:0; left:0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, rgba(255, 0, 102, 0.05), transparent);
+            pointer-events: none;
+        }
+
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8b949e;
+            margin-bottom: 10px;
             display: block;
         }
 
+        .date-display {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace; /* 代码风格字体 */
+        }
+
+        .counter {
+            font-size: 32px;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums; /* 等宽数字防止跳动 */
+        }
+        .blue .counter { color: var(--blue); }
+        .pink .counter { color: var(--pink); }
+
+        .unit { font-size: 14px; color: #666; font-weight: normal; margin-left: 5px; }
+
+        /* === 5. 底部 CPU 负载条 (装饰) === */
+        .footer-system {
+            margin-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #444;
+        }
+        .progress-bar {
+            width: 100%; height: 6px;
+            background: #222;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue), var(--pink));
+            width: 99%;
+            animation: loadSystem 3s ease-out forwards;
+            box-shadow: 0 0 10px var(--pink);
+        }
+
+        /* 动画 */
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes loadSystem { from { width: 0%; } to { width: 99%; } }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; padding: 10px; flex-direction: row; align-items: center; justify-content: space-between; border-right: none; border-bottom: 1px solid #30363d; }
-            .profile { margin-bottom: 0; padding-bottom: 0; border: none; margin-right: 10px; }
-            .profile-info { display: none; }
-            .nav-menu { display: flex; gap: 5px; overflow-x: auto; }
-            .music-player { display: none; /* 移动端暂时隐藏音乐条，省空间 */ }
-            .nav-btn { padding: 8px 12px; white-space: nowrap; }
+            .header-section { flex-direction: column; gap: 20px; text-align: center; }
+            .user-card { flex-direction: column; }
+            .pink-side p { text-align: center; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .counter { font-size: 24px; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <div class="profile">
-            <div class="avatar"></div>
-            <div class="profile-info">
-                <h3>家宝 ❤️ 宝宝</h3>
-                <p>Secret Space v1.0</p>
+    <div class="dashboard-container">
+        <div class="header-section">
+            <div class="user-card blue-side">
+                <div class="avatar-circle">张</div>
+                <div>
+                    <h2>张亦宸</h2>
+                    <p>SYSTEM ADMIN</p>
+                </div>
+            </div>
+
+            <div class="connector">♥</div>
+
+            <div class="user-card pink-side">
+                <div style="text-align: right;"> <h2>杨沁宜</h2>
+                    <p>CORE USER</p>
+                </div>
+                <div class="avatar-circle">杨</div>
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <button class="nav-btn" onclick="switchTab(this, 'welcome.html')">
-                    <span class="icon">🏠</span> 概览 Dashboard
-                </button>
-            </li>
-            
-            <li class="nav-item">
-                <button class="nav-btn special active" onclick="switchTab(this, 'love.html')">
-                    <span class="icon">🎁</span> 百日心盒 HeartBox
-                </button>
-            </li>
-
-            <li class="nav-item">
-                <button class="nav-btn" onclick="switchTab(this, 'tree.html')">
-                    <span class="icon">🎄</span> 魔法圣诞 MagicTree
-                </button>
-            </li>
-
-            <li class="nav-item">
-                <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">
-                    <span class="icon">🔒</span> 纪念日日历 (Dev)
-                </button>
-            </li>
-        </ul>
-
-        <div class="music-player">
-            <div class="music-info">
-                🎵 BGM: 交换余生 <span class="playing-indicator" id="play-status">▶ing</span>
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <span class="label">System Initialization (Met)</span>
+                <div class="date-display">2024.06.22</div>
+                <div class="counter" id="timer-meet">00<span class="unit">DAYS</span></div>
+                <div style="font-size: 12px; color: var(--blue); opacity: 0.7; margin-top: 5px;">
+                    故事开始的地方 / 命运齿轮转动
+                </div>
             </div>
-            <div class="music-controls">
-                <button class="control-btn" id="play-btn">播放</button>
-                <button class="control-btn" id="pause-btn">暂停</button>
+
+            <div class="stat-card pink">
+                <span class="label">Protocol Established (Love)</span>
+                <div class="date-display">2025.09.12</div>
+                <div class="counter" id="timer-love">00<span class="unit">DAYS</span></div>
+                <div style="font-size: 12px; color: var(--pink); opacity: 0.7; margin-top: 5px;">
+                    正式建立连接 / 专属时空开启
+                </div>
             </div>
         </div>
-    </nav>
 
-    <main class="main-content">
-        <iframe id="app-frame" src="love.html" title="App Window"></iframe>
-    </main>
+        <div class="footer-system">
+            <div style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>LOVE_KERNEL_V1.0</span>
+                    <span style="color: var(--pink);">SYSTEM STABLE</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div style="margin-top: 5px; text-align: right;">CPU LOAD: 100% (FULL OF LOVE)</div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // === 页面切换逻辑 ===
-        function switchTab(btn, url) {
-            // 1. 移除所有 active 样式
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            // 2. 给当前按钮添加 active
-            btn.classList.add('active');
-            // 3. 切换 iframe 地址
-            const frame = document.getElementById('app-frame');
+        // === 资深程序员的精准计时算法 ===
+        
+        // 定义两个关键时间点
+        // 注意：月份是从 0 开始的 (0=1月, 5=6月, 8=9月)
+        const dateMet = new Date(2024, 5, 22, 0, 0, 0); // 2024.6.22
+        const dateLove = new Date(2025, 8, 12, 0, 0, 0); // 2025.9.12
+
+        function updateTimers() {
+            const now = new Date();
+
+            // 计算相识时间
+            const diffMet = now - dateMet;
+            const daysMet = Math.floor(diffMet / (1000 * 60 * 60 * 24));
+            // 毫秒级跳动效果，增加科技感
+            const msMet = Math.floor((diffMet % 1000) / 10); 
+
+            // 计算相恋时间
+            const diffLove = now - dateLove;
+            // 如果还没到 2025.9.12 (虽然不太可能，但程序要有鲁棒性)
+            let daysLove = Math.floor(diffLove / (1000 * 60 * 60 * 24));
             
-            // 添加淡入淡出效果
-            frame.style.opacity = 0;
-            setTimeout(() => {
-                frame.src = url;
-                frame.onload = () => {
-                    frame.style.opacity = 1;
-                };
-            }, 200);
+            // 更新 DOM
+            // 这里我们做一个更高级的显示： 天数 + 小数点后两位的动态感
+            
+            document.getElementById('timer-meet').innerHTML = 
+                `${daysMet}<span style="font-size:14px;opacity:0.5">.${msMet}</span><span class="unit">DAYS</span>`;
+
+            // 如果还没到纪念日，显示倒计时
+            if (daysLove < 0) {
+                 document.getElementById('timer-love').innerHTML = 
+                `LOADING...<span class="unit">WAITING</span>`;
+            } else {
+                 const msLove = Math.floor((diffLove % 1000) / 10);
+                 document.getElementById('timer-love').innerHTML = 
+                `${daysLove}<span style="font-size:14px;opacity:0.5">.${msLove}</span><span class="unit">DAYS</span>`;
+            }
         }
 
-        // === 全局音乐控制 ===
-        // 注意：把 exchange.mp3 放在根目录，和 index.html 在一起
-        const audio = new Audio('love_story.mp3'); 
-        audio.loop = true;
-        audio.volume = 0.5;
-
-        const playBtn = document.getElementById('play-btn');
-        const pauseBtn = document.getElementById('pause-btn');
-        const statusText = document.getElementById('play-status');
-
-        playBtn.addEventListener('click', () => {
-            audio.play().then(() => {
-                statusText.style.display = 'inline';
-                playBtn.style.background = '#1f6feb';
-                playBtn.style.color = 'white';
-            }).catch(e => console.log("交互限制"));
-        });
-
-        pauseBtn.addEventListener('click', () => {
-            audio.pause();
-            statusText.style.display = 'none';
-            playBtn.style.background = '#30363d';
-        });
-
-        // 尝试自动播放 (部分浏览器允许)
-        document.body.addEventListener('click', () => {
-            if(audio.paused) {
-                audio.play();
-                statusText.style.display = 'inline';
-            }
-        }, { once: true });
-
+        // 启动引擎：每 30 毫秒刷新一次，保证数字疯狂跳动的机械感
+        setInterval(updateTimers, 30);
+        updateTimers(); // 初始化执行一次
     </script>
 </body>
 </html>
