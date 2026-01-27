@@ -3,197 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impressions</title>
+    <title>Our Impressions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --glass-card: rgba(255, 255, 255, 0.85);
-            --text-color: #555;
-            --blue-shadow: rgba(142, 197, 252, 0.4);
-            --pink-shadow: rgba(255, 154, 158, 0.4);
-        }
-
         body {
             margin: 0;
             min-height: 100vh;
-            /* 背景透明，透出主页的渐变 */
             background: transparent;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
             padding: 20px;
-            overflow-y: auto; /* 允许滚动 */
+            font-family: 'PingFang SC', sans-serif;
+            overflow-y: auto;
         }
+        ::-webkit-scrollbar { display: none; }
 
-        /* 隐藏滚动条但允许滚动 */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-
-        /* 标题区 */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeIn 1s ease-out;
-        }
-        .header h2 {
-            font-size: 24px;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            letter-spacing: 2px;
-            margin: 0;
-        }
-        .header p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.8);
-            margin-top: 5px;
-            letter-spacing: 1px;
-        }
-
-        /* 照片墙容器 */
-        .gallery-container {
+        .header-bar {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            padding-bottom: 50px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 10px;
+        }
+        .title {
+            color: #fff;
+            font-size: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: #555;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .upload-btn:hover { background: #fff; transform: translateY(-2px); color: #66a6ff; }
+        #file-input { display: none; }
+
+        .photo-wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
             max-width: 1000px;
             margin: 0 auto;
+            padding-bottom: 50px;
         }
 
-        /* 拍立得卡片 */
-        .polaroid {
-            background: var(--glass-card);
-            padding: 15px 15px 40px 15px; /* 底部留白给文字 */
-            border-radius: 4px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            width: 220px;
+        .photo-item {
             position: relative;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            animation: floatIn 0.8s backwards;
-        }
-
-        /* 照片本身 */
-        .photo-frame {
-            width: 100%;
-            height: 220px;
-            background-color: #eee;
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.4s;
+            animation: fadeUp 0.6s backwards;
         }
-        .photo-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+        .photo-item:hover { transform: translateY(-8px); border-color: #fff; z-index: 10; }
+        .photo-item:hover img { transform: scale(1.1); }
 
-        /* 手写字备注 */
-        .caption {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-family: 'Comic Sans MS', 'KaiTi', cursive; /* 手写字体回退 */
-            font-size: 14px;
-            color: #666;
-            letter-spacing: 1px;
-        }
-
-        /* 📌 钉子装饰 (可选) */
-        .pin {
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            position: absolute;
-            top: -6px; left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-        /* 蓝色钉子 */
-        .pin.blue { background: #8ec5fc; }
-        /* 粉色钉子 */
-        .pin.pink { background: #ff9a9e; }
-
-        /* === 悬停特效 === */
-        .polaroid:hover {
-            transform: scale(1.05) rotate(0deg) !important; /* 悬停时摆正 */
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-        .polaroid:hover img {
-            transform: scale(1.1); /* 照片微放大 */
-        }
-
-        /* === 动画定义 === */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes floatIn { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            .polaroid { width: 45%; padding: 10px 10px 30px 10px; }
-            .photo-frame { height: 150px; }
-            .caption { font-size: 12px; }
-            .gallery-container { gap: 15px; }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        #loading-tip { text-align: center; color: rgba(255,255,255,0.8); font-size: 14px; width: 100%; margin-top: 50px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>IMPRESSIONS</h2>
-        <p>定格我们的每一个心动瞬间</p>
+    <div class="header-bar">
+        <div class="title">IMPRESSIONS</div>
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+            <span>📷</span> 上传照片
+        </button>
+        <input type="file" id="file-input" accept="image/*" onchange="handleUpload(event)">
     </div>
 
-    <div class="gallery-container">
+    <div class="photo-wall" id="gallery"></div>
+    <div id="loading-tip">正在加载云端相册...</div>
+
+<script>
+    // ==========================================
+    // 👇 还是填刚才那一套钥匙 (URL 和 Key) 👇
+    // ==========================================
+    const SUPABASE_URL = 'https://nnyorzfnhikhwcyyqrcm.supabase.co'; 
+    const SUPABASE_KEY = '这里填你的 API Key'; 
+    // ==========================================
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 桶的名字 (如果你在Storage里建的是 'photos' 就改这里)
+    const BUCKET_NAME = 'album'; 
+
+    // 1. 直接读取存储桶里的所有文件 (无需数据库表)
+    async function fetchPhotos() {
+        const { data, error } = await _supabase
+            .storage
+            .from(BUCKET_NAME)
+            .list('', {
+                limit: 100,
+                offset: 0,
+                sortBy: { column: 'created_at', order: 'desc' }, // 按上传时间倒序
+            });
+
+        const gallery = document.getElementById('gallery');
+        const tip = document.getElementById('loading-tip');
+
+        if (error) {
+            console.error(error);
+            tip.innerText = '加载失败，可能是桶名称不对或权限未开';
+            return;
+        }
+
+        gallery.innerHTML = '';
         
-        <div class="polaroid" style="transform: rotate(-3deg);">
-            <div class="pin blue"></div>
-            <div class="photo-frame">
-                <img src="chat01.jpg" alt="Memory">
-            </div>
-            <div class="caption">初次见面</div>
-        </div>
+        // 过滤掉系统自动生成的 .emptyFolderPlaceholder 文件
+        const photos = data.filter(item => item.name !== '.emptyFolderPlaceholder');
 
-        <div class="polaroid" style="transform: rotate(2deg); animation-delay: 0.1s;">
-            <div class="pin pink"></div>
-            <div class="photo-frame">
-                <img src="lovemajor.jpg" alt="Memory">
-            </div>
-            <div class="caption">最好的我们</div>
-        </div>
+        if (photos.length === 0) {
+            tip.innerText = '相册是空的，快上传第一张吧！';
+        } else {
+            tip.style.display = 'none';
+            photos.forEach((item, index) => {
+                // 获取每张图的公开链接
+                const { data: { publicUrl } } = _supabase
+                    .storage
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(item.name);
 
-        <div class="polaroid" style="transform: rotate(-1deg); animation-delay: 0.2s;">
-            <div class="pin blue"></div>
-            <div class="photo-frame">
-                <img src="chat05.jpg" alt="Memory">
-            </div>
-            <div class="caption">傻瓜宝宝</div>
-        </div>
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.style.animationDelay = `${index * 0.05}s`;
+                div.innerHTML = `<img src="${publicUrl}" loading="lazy">`;
+                gallery.appendChild(div);
+            });
+        }
+    }
 
-        <div class="polaroid" style="transform: rotate(3deg); animation-delay: 0.3s;">
-            <div class="pin pink"></div>
-            <div class="photo-frame">
-                <img src="chat12.jpg" alt="Memory">
-            </div>
-            <div class="caption">一起去的地方</div>
-        </div>
+    // 2. 上传逻辑 (只传文件，不写库)
+    async function handleUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-        <div class="polaroid" style="transform: rotate(-2deg); animation-delay: 0.4s;">
-            <div class="pin blue"></div>
-            <div class="photo-frame">
-                <img src="chat26.jpg" alt="Memory">
-            </div>
-            <div class="caption">聊天记录</div>
-        </div>
+        const btn = document.querySelector('.upload-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ 存图中...';
+        btn.style.opacity = 0.7;
 
-        <div class="polaroid" style="transform: rotate(2deg); animation-delay: 0.5s;">
-            <div class="pin pink"></div>
-            <div class="photo-frame">
-                <img src="love_1.jpg" alt="Memory">
-            </div>
-            <div class="caption">Love Story</div>
-        </div>
+        try {
+            // 生成唯一文件名
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            
+            // 上传
+            const { error: uploadError } = await _supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, file);
 
-    </div>
+            if (uploadError) throw uploadError;
 
+            alert('上传成功！✨');
+            // 稍等一下再刷新，因为云存储有时候有1秒延迟
+            setTimeout(fetchPhotos, 1000);
+
+        } catch (error) {
+            console.error(error);
+            alert('上传失败：' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.style.opacity = 1;
+            document.getElementById('file-input').value = '';
+        }
+    }
+
+    fetchPhotos();
+</script>
 </body>
 </html>
