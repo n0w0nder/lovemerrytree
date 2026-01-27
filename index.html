@@ -2,163 +2,232 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>家宝和宝宝的秘密空间</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家宝 & 宝宝 | Secret Space</title>
     <style>
-        /* === 1. 全局重置与字体 === */
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            overflow: hidden; /* 禁止滚动 */
+        /* === 全局重置 === */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #0d1117; /* GitHub Dark 背景色 */
+            color: #c9d1d9; /* GitHub 文字色 */
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
         }
 
-        /* === 2. 动态蓝粉渐变背景 === */
-        .background {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(-45deg, #a18cd1 0%, #fbc2eb 25%, #a6c1ee 75%, #96e6a1 100%);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            z-index: -2;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* === 左侧侧边栏 (Sidebar) === */
+        .sidebar {
+            width: 280px;
+            background-color: #161b22; /* GitHub 侧边栏色 */
+            border-right: 1px solid #30363d;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            flex-shrink: 0;
+            transition: width 0.3s;
         }
 
-        /* === 3. 漂浮的装饰球 (氛围组) === */
-        .shape {
-            position: absolute; filter: blur(50px); z-index: -1;
-            animation: floatShape 20s infinite alternate;
+        /* 头像区域 */
+        .profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363d;
         }
-        .shape-1 {
-            width: 300px; height: 300px; background: #fbc2eb; /* 粉 */
-            top: -50px; left: -50px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-        }
-        .shape-2 {
-            width: 400px; height: 400px; background: #a6c1ee; /* 蓝 */
-            bottom: -100px; right: -100px; border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            animation-duration: 25s;
-        }
-        @keyframes floatShape {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(50px, 50px) rotate(20deg); }
-        }
-
-        /* === 4. 主容器 (毛玻璃卡片) === */
-        .container {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%; max-width: 400px;
-            padding: 40px 20px;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            animation: popIn 1s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        @keyframes popIn {
-            from { opacity: 0; transform: translate(-50%, -40%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
-        }
-
-        /* === 5. 内容样式 === */
-        .avatar-group {
-            display: flex; justify-content: center; align-items: center; margin-bottom: 20px;
-        }
-        /* 模拟两个小头像重叠 */
         .avatar {
-            width: 60px; height: 60px; border-radius: 50%;
-            border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background-color: #eee; background-size: cover; background-position: center;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: #ff0066; /* 你的头像背景 */
+            margin-right: 12px;
+            border: 2px solid #30363d;
+            background-image: url('chat26.jpg'); /* 你的头像 */
+            background-size: cover;
         }
-        .avatar.blue { background-color: #a6c1ee; z-index: 1; transform: translateX(10px); } /* 这里可以换成你的头像图片url */
-        .avatar.pink { background-color: #fbc2eb; z-index: 2; transform: translateX(-10px); } /* 这里可以换成她的头像图片url */
+        .profile-info h3 { font-size: 16px; color: #e6edf3; }
+        .profile-info p { font-size: 12px; color: #8b949e; }
 
-        h1 {
-            color: #fff; font-size: 24px; margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 1px;
-        }
-        p {
-            color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 40px;
-            line-height: 1.6;
-        }
-
-        /* === 6. 进入按钮 === */
-        .enter-btn {
-            display: inline-block;
-            padding: 15px 50px;
-            font-size: 16px; font-weight: bold; color: #7a88a0;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50px; text-decoration: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        /* 菜单列表 */
+        .nav-menu { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 4px; }
+        
+        .nav-btn {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 10px 16px;
+            color: #c9d1d9;
+            font-size: 14px;
+            border-radius: 6px;
             cursor: pointer;
-            letter-spacing: 2px;
-            position: relative; overflow: hidden;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
         }
-        .enter-btn:hover {
-            transform: translateY(-2px);
-            background: white;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            color: #ff9a9e;
+        
+        /* 选中状态 & 悬停状态 */
+        .nav-btn:hover { background-color: #21262d; }
+        .nav-btn.active { 
+            background-color: #1f6feb; /* GitHub 蓝色高亮 */
+            color: #ffffff;
+            font-weight: bold;
         }
-        .enter-btn::after {
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-            transition: 0.5s;
-        }
-        .enter-btn:hover::after { left: 100%; }
+        /* 特殊高亮给心形盒子 */
+        .nav-btn.special.active { background-color: #ff0066; border: 1px solid #ff0066; }
 
-        /* === 7. 底部版权 === */
-        .footer {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: rgba(255,255,255,0.6); font-size: 12px;
+        .icon { margin-right: 10px; width: 16px; text-align: center; }
+
+        /* 音乐播放器区域 (固定在左下角) */
+        .music-player {
+            margin-top: auto;
+            padding: 15px;
+            background: #21262d;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+        }
+        .music-info { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+        .music-controls { display: flex; gap: 10px; }
+        .control-btn {
+            background: #30363d; border: none; color: #c9d1d9;
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
+            flex: 1;
+        }
+        .control-btn:hover { background: #8b949e; color: white; }
+        .playing-indicator { color: #ff0066; font-weight: bold; font-size: 12px; display: none; }
+
+        /* === 右侧内容区 (Main Content) === */
+        .main-content {
+            flex-grow: 1;
+            background-color: #0d1117;
+            position: relative;
+        }
+
+        /* iframe 容器 */
+        #app-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; padding: 10px; flex-direction: row; align-items: center; justify-content: space-between; border-right: none; border-bottom: 1px solid #30363d; }
+            .profile { margin-bottom: 0; padding-bottom: 0; border: none; margin-right: 10px; }
+            .profile-info { display: none; }
+            .nav-menu { display: flex; gap: 5px; overflow-x: auto; }
+            .music-player { display: none; /* 移动端暂时隐藏音乐条，省空间 */ }
+            .nav-btn { padding: 8px 12px; white-space: nowrap; }
         }
     </style>
 </head>
 <body>
 
-    <div class="background"></div>
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
+    <nav class="sidebar">
+        <div class="profile">
+            <div class="avatar"></div>
+            <div class="profile-info">
+                <h3>家宝 ❤️ 宝宝</h3>
+                <p>Secret Space v1.0</p>
+            </div>
+        </div>
 
-    <div class="container">
-        <div class="avatar-group">
-            <div class="avatar blue" style="background-image: url('chat26.jpg');"></div> <div class="avatar pink" style="background-image: url('lovemajor.jpg');"></div> </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab(this, 'welcome.html')">
+                    <span class="icon">🏠</span> 概览 Dashboard
+                </button>
+            </li>
+            
+            <li class="nav-item">
+                <button class="nav-btn special active" onclick="switchTab(this, 'love.html')">
+                    <span class="icon">🎁</span> 百日心盒 HeartBox
+                </button>
+            </li>
 
-        <h1>家宝 & 宝宝</h1>
-        <p>这里藏着我们的 100 天<br>和无数个未来的日日夜夜</p>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="switchTab(this, 'tree.html')">
+                    <span class="icon">🎄</span> 魔法圣诞 MagicTree
+                </button>
+            </li>
 
-        <a id="enter-link" class="enter-btn">进入秘密空间</a>
-    </div>
+            <li class="nav-item">
+                <button class="nav-btn" style="opacity: 0.5; cursor: not-allowed;">
+                    <span class="icon">🔒</span> 纪念日日历 (Dev)
+                </button>
+            </li>
+        </ul>
 
-    <div class="footer">Since 2025.9.12</div>
+        <div class="music-player">
+            <div class="music-info">
+                🎵 BGM: 交换余生 <span class="playing-indicator" id="play-status">▶ing</span>
+            </div>
+            <div class="music-controls">
+                <button class="control-btn" id="play-btn">播放</button>
+                <button class="control-btn" id="pause-btn">暂停</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <iframe id="app-frame" src="love.html" title="App Window"></iframe>
+    </main>
 
     <script>
-        // 添加点击后的转场特效
-        document.getElementById('enter-link').addEventListener('click', function(e) {
-            e.preventDefault(); // 阻止默认直接跳转
+        // === 页面切换逻辑 ===
+        function switchTab(btn, url) {
+            // 1. 移除所有 active 样式
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            // 2. 给当前按钮添加 active
+            btn.classList.add('active');
+            // 3. 切换 iframe 地址
+            const frame = document.getElementById('app-frame');
             
-            const btn = this;
-            btn.innerText = "正在开启...";
-            btn.style.transform = "scale(0.95)";
-            
-            // 简单的淡出效果
-            document.querySelector('.container').style.opacity = '0';
-            document.querySelector('.container').style.transform = 'translate(-50%, -60%)';
-            document.querySelector('.container').style.transition = 'all 0.8s ease';
-
-            // 800毫秒后跳转到心形盒子页面
+            // 添加淡入淡出效果
+            frame.style.opacity = 0;
             setTimeout(() => {
-                // 【注意】这里一定要对应你改名后的文件名！
-                window.location.href = 'love.html'; 
-            }, 800);
+                frame.src = url;
+                frame.onload = () => {
+                    frame.style.opacity = 1;
+                };
+            }, 200);
+        }
+
+        // === 全局音乐控制 ===
+        // 注意：把 exchange.mp3 放在根目录，和 index.html 在一起
+        const audio = new Audio('love_story.mp3'); 
+        audio.loop = true;
+        audio.volume = 0.5;
+
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const statusText = document.getElementById('play-status');
+
+        playBtn.addEventListener('click', () => {
+            audio.play().then(() => {
+                statusText.style.display = 'inline';
+                playBtn.style.background = '#1f6feb';
+                playBtn.style.color = 'white';
+            }).catch(e => console.log("交互限制"));
         });
+
+        pauseBtn.addEventListener('click', () => {
+            audio.pause();
+            statusText.style.display = 'none';
+            playBtn.style.background = '#30363d';
+        });
+
+        // 尝试自动播放 (部分浏览器允许)
+        document.body.addEventListener('click', () => {
+            if(audio.paused) {
+                audio.play();
+                statusText.style.display = 'inline';
+            }
+        }, { once: true });
+
     </script>
 </body>
 </html>
