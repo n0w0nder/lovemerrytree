@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Time</title>
+    <style>
+        /* === 1. 柔和浅色系设定 === */
+        :root {
+            /* 双子蓝 - 风的颜色 */
+            --gemini-color: #89f7fe;
+            --gemini-deep: #66a6ff;
+            /* 巨蟹粉 - 水的温柔 */
+            --cancer-color: #ff9a9e;
+            --cancer-deep: #fecfef;
+            
+            --text-main: #555;
+            --text-sub: #888;
+            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); /* 默认柔和蓝底 */
+            /* 动态背景切换 */
+            background: linear-gradient(-45deg, #a18cd1, #fbc2eb, #a6c1ee, #96e6a1);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            
+            font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* === 2. 主卡片：白玉玻璃质感 === */
+        .main-card {
+            width: 85%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.05),
+                inset 0 0 20px rgba(255, 255, 255, 0.8);
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 背景装饰纹理 (星座连线感) */
+        .bg-decoration {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(161, 196, 253, 0.3) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        /* === 3. 顶部：星座配对区域 === */
+        .couple-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .person {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .avatar-shadow {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .constellation-icon {
+            font-size: 40px;
+            background: -webkit-linear-gradient(45deg, #eee, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 双子特调 */
+        .gemini .constellation-icon {
+            background: -webkit-linear-gradient(45deg, var(--gemini-color), var(--gemini-deep));
+            -webkit-background-clip: text;
+        }
+        .gemini h2 { color: #5ca0f2; }
+        
+        /* 巨蟹特调 */
+        .cancer .constellation-icon {
+            background: -webkit-linear-gradient(45deg, var(--cancer-color), var(--cancer-deep));
+            -webkit-background-clip: text;
+        }
+        .cancer h2 { color: #ff8fab; }
+
+        .person h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 1px; }
+        .person .zodiac-name { font-size: 12px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; }
+
+        /* 中间连接符号 */
+        .connect-heart {
+            font-size: 24px;
+            color: #ffb6c1;
+            animation: heartbeat 2s infinite ease-in-out;
+            position: relative;
+            top: -15px;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* === 4. 时间胶囊卡片 === */
+        .timeline-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .time-card {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .time-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 25px rgba(166, 193, 238, 0.2);
+        }
+
+        .card-label {
+            font-size: 13px; color: #999; letter-spacing: 2px; margin-bottom: 5px; display: block;
+        }
+        .card-date {
+            font-size: 14px; color: #aaa; margin-bottom: 15px; font-weight: 300;
+        }
+        
+        .days-count {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+
+        /* 配色定制 */
+        .meet-card .days-count {
+            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .love-card .days-count {
+            background: linear-gradient(to right, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .unit { font-size: 14px; color: #bbb; font-weight: normal; margin-left: 5px; -webkit-text-fill-color: #bbb; }
+
+        /* === 5. 底部标语 === */
+        .footer-msg {
+            text-align: center;
+            font-size: 14px;
+            color: #8faacc;
+            letter-spacing: 4px;
+            font-weight: 300;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .main-card { padding: 30px 20px; width: 90%; }
+            .timeline-container { grid-template-columns: 1fr; gap: 20px; }
+            .person h2 { font-size: 18px; }
+            .days-count { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-card">
+        <div class="bg-decoration"></div>
+
+        <div class="couple-section">
+            <div class="person gemini">
+                <div class="avatar-shadow">
+                    <span class="constellation-icon">♊</span>
+                </div>
+                <h2>张亦宸</h2>
+                <span class="zodiac-name">Gemini</span>
+            </div>
+
+            <div class="connect-heart">♥</div>
+
+            <div class="person cancer">
+                <div class="avatar-shadow">
+                    <span class="constellation-icon">♋</span>
+                </div>
+                <h2>杨沁宜</h2>
+                <span class="zodiac-name">Cancer</span>
+            </div>
+        </div>
+
+        <div class="timeline-container">
+            <div class="time-card meet-card">
+                <span class="card-label">The Encounter</span>
+                <div class="card-date">2024.06.22</div>
+                <div class="days-count" id="days-meet">0<span class="unit">days</span></div>
+            </div>
+
+            <div class="time-card love-card">
+                <span class="card-label">The Beginning</span>
+                <div class="card-date">2025.09.12</div>
+                <div class="days-count" id="days-love">0<span class="unit">days</span></div>
+            </div>
+        </div>
+
+        <div class="footer-msg">
+            Wind meets Water, a Gentle Universe.
+        </div>
+    </div>
+
+    <script>
+        // === 温柔的计时器逻辑 (去除毫秒，只保留天数) ===
+        
+        const dateMet = new Date(2024, 5, 22); // 2024.6.22 (月份-1)
+        const dateLove = new Date(2025, 8, 12); // 2025.9.12
+
+        function updateDays() {
+            const now = new Date();
+            
+            // 计算时间差 (毫秒)
+            const diffMet = now - dateMet;
+            const diffLove = now - dateLove;
+
+            // 转换为天数 (向上取整，表示“第x天”)
+            const daysMet = Math.floor(diffMet / (1000 * 60 * 60 * 24));
+            let daysLove = Math.floor(diffLove / (1000 * 60 * 60 * 24));
+
+            // 更新显示
+            document.getElementById('days-meet').innerHTML = daysMet + '<span class="unit">days</span>';
+
+            if (daysLove < 0) {
+                document.getElementById('days-love').innerHTML = "Soon<span class='unit'>...</span>";
+            } else {
+                document.getElementById('days-love').innerHTML = daysLove + '<span class="unit">days</span>';
+            }
+        }
+
+        // 不需要高频刷新，1分钟刷新一次即可，静谧不打扰
+        updateDays();
+        setInterval(updateDays, 60000); 
+    </script>
+</body>
+</html>
