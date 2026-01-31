@@ -18,10 +18,9 @@
             background: transparent;
             font-family: 'PingFang SC', sans-serif;
             padding: 20px;
-            overflow-x: hidden; /* 防止横向滚动 */
+            overflow-x: hidden; 
         }
         
-        /* 隐藏滚动条 */
         ::-webkit-scrollbar { display: none; }
 
         .container {
@@ -40,7 +39,7 @@
             background: #fff; border: none; padding: 8px 15px;
             border-radius: 20px; cursor: pointer; color: #666;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-right: 15px;
-            display: none; /* 默认隐藏 */
+            display: none; 
             font-size: 14px; transition: 0.2s;
         }
         .back-btn:hover { transform: translateX(-3px); color: var(--primary-color); }
@@ -48,7 +47,7 @@
 
         /* === 页面容器 === */
         .view-section {
-            display: none; /* 默认隐藏所有部分，JS控制显示 */
+            display: none; 
             animation: slideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
         .view-section.active { display: block; }
@@ -83,7 +82,7 @@
         .day-box {
             background: rgba(255,255,255,0.9);
             border-radius: 15px;
-            aspect-ratio: 1/1; /* 正方形 */
+            aspect-ratio: 1/1; 
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             cursor: pointer; transition: all 0.3s;
@@ -95,7 +94,7 @@
             color: var(--primary-color);
         }
         .day-num { font-size: 24px; font-weight: bold; font-family: 'Helvetica Neue', sans-serif; }
-        .day-label { font-size: 12px; color: #999; margin-top: 5px; }
+        .day-label { font-size: 12px; color: #999; margin-top: 5px; text-align: center; padding: 0 5px;}
 
         /* === 3. 详情内容 (Level 3) === */
         .detail-card {
@@ -132,77 +131,108 @@
             <div class="page-title" id="pageTitle">我们的旅行</div>
         </div>
 
-        <div id="tripListView" class="view-section active">
-            </div>
+        <div id="tripListView" class="view-section active"></div>
 
         <div id="daysListView" class="view-section">
-            <div class="days-grid" id="daysGrid">
-                </div>
+            <div class="days-grid" id="daysGrid"></div>
         </div>
 
         <div id="detailView" class="view-section">
             <div class="detail-card">
                 <div class="detail-title" id="detailTitle">标题</div>
                 <div class="detail-desc" id="detailDesc">描述内容</div>
-                <div class="photo-grid" id="photoGrid">
-                    </div>
+                <div class="photo-grid" id="photoGrid"></div>
             </div>
         </div>
     </div>
 
 <script>
     // ===============================================
-    // ✈️ 旅行数据配置中心
-    // 以后有新旅行，直接复制下面的大括号块，改里面的字就行
+    // 🛠️ 小工具：自动生成照片数组 (不用手写文件名了)
+    // ===============================================
+    function getPhotos(count) {
+        let photos = [];
+        for (let i = 1; i <= count; i++) {
+            photos.push(i + '.jpg');
+        }
+        return photos;
+    }
+
+    // ===============================================
+    // ✈️ 旅行数据配置中心 (这里就是你刚才发给我的所有内容)
     // ===============================================
     const TRIPS = [
         {
             id: 'shanghai2026',
             title: '上海行',
             date: '2026年1月22日 - 1月29日',
-            cover: 'SHD1/1.jpg', // 列表页显示的封面图
+            cover: 'SHD1/1.jpg', 
             days: [
                 // Day 1
                 {
                     title: '终于见到了',
                     desc: '去了蟠龙新天地和家宝还有叔叔阿姨一起吃了一顿饭。开心！',
-                    folder: 'SHD1', // 照片所在的文件夹
-                    photos: ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg'] // 照片名字
+                    folder: 'SHD1', 
+                    photos: getPhotos(5) // 自动生成 1.jpg 到 5.jpg
                 },
-                // Day 2 (占位，待填充)
-                { title: '待更新', desc: 'Day 2 的故事等你来写...', folder: '', photos: [] },
+                // Day 2
+                {
+                    title: '迪士尼之旅',
+                    desc: '和家宝畅玩一天，非常开心，下次进去一定坐极速光轮（家宝好香）',
+                    folder: 'SHD2',
+                    photos: getPhotos(16) // 自动生成 1-16.jpg
+                },
                 // Day 3
-                { title: '待更新', desc: 'Day 3 的故事等你来写...', folder: '', photos: [] },
+                {
+                    title: '天文馆',
+                    desc: '倒腾三线地铁来到水滴湖郊区天文馆，望远镜看月球和木星真清楚，影院也相当不错',
+                    folder: 'SHD3',
+                    photos: getPhotos(9) // 1-9.jpg
+                },
                 // Day 4
-                { title: '待更新', desc: 'Day 4 的故事等你来写...', folder: '', photos: [] },
+                {
+                    title: '南京东路—博物馆—外滩',
+                    desc: '成功给家宝“种草”，差点被一拳打飞哈哈，外滩家宝大摄影师拍的真好看',
+                    folder: 'SHD4',
+                    photos: getPhotos(9)
+                },
                 // Day 5
-                { title: '待更新', desc: 'Day 5 的故事等你来写...', folder: '', photos: [] },
+                {
+                    title: '背着老爸来约会',
+                    desc: '拍拍拍！',
+                    folder: 'SHD5',
+                    photos: getPhotos(9)
+                },
                 // Day 6
-                { title: '待更新', desc: 'Day 6 的故事等你来写...', folder: '', photos: [] },
+                {
+                    title: '叔叔阿姨又请吃饭',
+                    desc: '叔叔在家宝不怎么说话，我也感到压迫/(ㄒoㄒ)/~~',
+                    folder: 'SHD6',
+                    photos: getPhotos(3)
+                },
                 // Day 7
-                { title: '待更新', desc: 'Day 7 的故事等你来写...', folder: '', photos: [] },
+                {
+                    title: '淮海路——新天地city walk',
+                    desc: '家宝请我吃鼎泰丰，蟹黄包好好吃，在淮海路就是逛逛拍拍拍，怎么拍家宝怎么好看，两个人找不到路笑死了，还在公园背着家宝拍影子',
+                    folder: 'SHD7',
+                    photos: getPhotos(18)
+                },
                 // Day 8
-                { title: '待更新', desc: 'Day 8 的故事等你来写...', folder: '', photos: [] }
+                {
+                    title: '离别之际',
+                    desc: '没想到一周那么快过去，和家宝的一周约会也告一尾声，家宝是个非常有才华、理性的女孩子，开心。时光匆匆但为更好的遇见，爱你家宝。',
+                    folder: 'SHD8',
+                    photos: getPhotos(4)
+                }
             ]
-        },
-        
-        // 示例：以后如果有了北京行，就把下面注释打开改一下
-        /*
-        {
-            id: 'beijing2027',
-            title: '北京行',
-            date: '2027年...',
-            cover: 'xxx/1.jpg',
-            days: [ ... ]
         }
-        */
     ];
 
     // ===============================================
     // 🧠 逻辑处理区 (不用动)
     // ===============================================
 
-    let currentLevel = 1; // 1=列表, 2=天数, 3=详情
+    let currentLevel = 1; 
     let currentTripIdx = 0;
 
     const backBtn = document.getElementById('backBtn');
@@ -249,12 +279,12 @@
             box.onclick = () => openDayDetail(dayIdx);
             box.innerHTML = `
                 <div class="day-num">DAY ${dayIdx + 1}</div>
-                <div class="day-label">${dayData.title === '待更新' ? '未完待续' : '点击查看'}</div>
+                <div class="day-label">${dayData.title}</div>
             `;
             grid.appendChild(box);
         });
 
-        pageTitle.innerText = trip.title; // 改标题
+        pageTitle.innerText = trip.title; 
         switchView(2);
     }
 
@@ -272,9 +302,10 @@
             dayData.photos.forEach(photoName => {
                 const img = document.createElement('img');
                 img.className = 'photo-item';
-                // 拼接路径：文件夹 + / + 文件名
                 img.src = `${dayData.folder}/${photoName}`; 
                 img.loading = 'lazy';
+                // 点击放大预览的简单实现
+                img.onclick = () => window.open(img.src);
                 photoGrid.appendChild(img);
             });
         } else {
@@ -286,14 +317,10 @@
 
     // 页面切换逻辑
     function switchView(level) {
-        // 隐藏所有
         Object.values(views).forEach(el => el.classList.remove('active'));
-        // 显示目标
         views[level].classList.add('active');
-        
         currentLevel = level;
         
-        // 控制返回按钮
         if (level === 1) {
             backBtn.style.display = 'none';
             pageTitle.innerText = '我们的旅行';
@@ -305,16 +332,13 @@
     // 返回上一级
     function goBack() {
         if (currentLevel === 3) {
-            // 从详情回天数列表
             pageTitle.innerText = TRIPS[currentTripIdx].title;
             switchView(2);
         } else if (currentLevel === 2) {
-            // 从天数列表回总旅行列表
             switchView(1);
         }
     }
 
-    // 启动
     init();
 
 </script>
