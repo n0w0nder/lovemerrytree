@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Journeys</title>
+    <style>
+        :root {
+            --primary-color: #8ec5fc;
+            --secondary-color: #e0c3fc;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #444;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: transparent;
+            font-family: 'PingFang SC', sans-serif;
+            padding: 20px;
+            overflow-x: hidden; /* 防止横向滚动 */
+        }
+        
+        /* 隐藏滚动条 */
+        ::-webkit-scrollbar { display: none; }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 80vh;
+        }
+
+        /* === 顶部导航栏 === */
+        .header {
+            display: flex; align-items: center; margin-bottom: 20px;
+            animation: fadeIn 0.5s;
+        }
+        .back-btn {
+            background: #fff; border: none; padding: 8px 15px;
+            border-radius: 20px; cursor: pointer; color: #666;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-right: 15px;
+            display: none; /* 默认隐藏 */
+            font-size: 14px; transition: 0.2s;
+        }
+        .back-btn:hover { transform: translateX(-3px); color: var(--primary-color); }
+        .page-title { font-size: 22px; font-weight: bold; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* === 页面容器 === */
+        .view-section {
+            display: none; /* 默认隐藏所有部分，JS控制显示 */
+            animation: slideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .view-section.active { display: block; }
+
+        /* === 1. 旅行列表 (Level 1) === */
+        .trip-card {
+            background: var(--glass-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
+        }
+        .trip-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .trip-cover {
+            width: 80px; height: 80px; border-radius: 12px;
+            background-size: cover; background-position: center;
+            margin-right: 20px; flex-shrink: 0;
+            border: 2px solid #fff;
+        }
+        .trip-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
+        .trip-info p { margin: 0; font-size: 13px; color: #888; }
+        .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
+
+        /* === 2. 天数网格 (Level 2) === */
+        .days-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px;
+        }
+        .day-box {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            aspect-ratio: 1/1; /* 正方形 */
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+        }
+        .day-box:hover {
+            transform: scale(1.05); border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .day-num { font-size: 24px; font-weight: bold; font-family: 'Helvetica Neue', sans-serif; }
+        .day-label { font-size: 12px; color: #999; margin-top: 5px; }
+
+        /* === 3. 详情内容 (Level 3) === */
+        .detail-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .detail-title {
+            font-size: 20px; font-weight: bold; margin-bottom: 15px;
+            border-left: 5px solid var(--secondary-color); padding-left: 15px;
+            color: #333;
+        }
+        .detail-desc { font-size: 15px; color: #555; line-height: 1.8; margin-bottom: 30px; }
+        
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
+        }
+        .photo-item {
+            width: 100%; aspect-ratio: 1/1; border-radius: 10px;
+            object-fit: cover; cursor: zoom-in;
+            transition: transform 0.3s; background: #eee;
+        }
+        .photo-item:hover { transform: scale(1.03); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" id="backBtn" onclick="goBack()">← 返回</button>
+            <div class="page-title" id="pageTitle">我们的旅行</div>
+        </div>
+
+        <div id="tripListView" class="view-section active">
+            </div>
+
+        <div id="daysListView" class="view-section">
+            <div class="days-grid" id="daysGrid">
+                </div>
+        </div>
+
+        <div id="detailView" class="view-section">
+            <div class="detail-card">
+                <div class="detail-title" id="detailTitle">标题</div>
+                <div class="detail-desc" id="detailDesc">描述内容</div>
+                <div class="photo-grid" id="photoGrid">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // ===============================================
+    // ✈️ 旅行数据配置中心
+    // 以后有新旅行，直接复制下面的大括号块，改里面的字就行
+    // ===============================================
+    const TRIPS = [
+        {
+            id: 'shanghai2026',
+            title: '上海行',
+            date: '2026年1月22日 - 1月29日',
+            cover: 'SHD1/1.jpg', // 列表页显示的封面图
+            days: [
+                // Day 1
+                {
+                    title: '终于见到了',
+                    desc: '去了蟠龙新天地和家宝还有叔叔阿姨一起吃了一顿饭。开心！',
+                    folder: 'SHD1', // 照片所在的文件夹
+                    photos: ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg'] // 照片名字
+                },
+                // Day 2 (占位，待填充)
+                { title: '待更新', desc: 'Day 2 的故事等你来写...', folder: '', photos: [] },
+                // Day 3
+                { title: '待更新', desc: 'Day 3 的故事等你来写...', folder: '', photos: [] },
+                // Day 4
+                { title: '待更新', desc: 'Day 4 的故事等你来写...', folder: '', photos: [] },
+                // Day 5
+                { title: '待更新', desc: 'Day 5 的故事等你来写...', folder: '', photos: [] },
+                // Day 6
+                { title: '待更新', desc: 'Day 6 的故事等你来写...', folder: '', photos: [] },
+                // Day 7
+                { title: '待更新', desc: 'Day 7 的故事等你来写...', folder: '', photos: [] },
+                // Day 8
+                { title: '待更新', desc: 'Day 8 的故事等你来写...', folder: '', photos: [] }
+            ]
+        },
+        
+        // 示例：以后如果有了北京行，就把下面注释打开改一下
+        /*
+        {
+            id: 'beijing2027',
+            title: '北京行',
+            date: '2027年...',
+            cover: 'xxx/1.jpg',
+            days: [ ... ]
+        }
+        */
+    ];
+
+    // ===============================================
+    // 🧠 逻辑处理区 (不用动)
+    // ===============================================
+
+    let currentLevel = 1; // 1=列表, 2=天数, 3=详情
+    let currentTripIdx = 0;
+
+    const backBtn = document.getElementById('backBtn');
+    const pageTitle = document.getElementById('pageTitle');
+    const views = {
+        1: document.getElementById('tripListView'),
+        2: document.getElementById('daysListView'),
+        3: document.getElementById('detailView')
+    };
+
+    // 初始化：渲染旅行列表
+    function init() {
+        const listContainer = document.getElementById('tripListView');
+        listContainer.innerHTML = '';
+        
+        TRIPS.forEach((trip, index) => {
+            const card = document.createElement('div');
+            card.className = 'trip-card';
+            card.onclick = () => openTrip(index);
+            card.innerHTML = `
+                <div class="trip-cover" style="background-image: url('${trip.cover}')"></div>
+                <div class="trip-info">
+                    <h3>${trip.title}</h3>
+                    <p>📅 ${trip.date}</p>
+                </div>
+                <div class="arrow">➜</div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    // 进入 Level 2: 天数选择
+    function openTrip(index) {
+        currentTripIdx = index;
+        const trip = TRIPS[index];
+        
+        // 渲染天数格子
+        const grid = document.getElementById('daysGrid');
+        grid.innerHTML = '';
+        
+        trip.days.forEach((dayData, dayIdx) => {
+            const box = document.createElement('div');
+            box.className = 'day-box';
+            box.onclick = () => openDayDetail(dayIdx);
+            box.innerHTML = `
+                <div class="day-num">DAY ${dayIdx + 1}</div>
+                <div class="day-label">${dayData.title === '待更新' ? '未完待续' : '点击查看'}</div>
+            `;
+            grid.appendChild(box);
+        });
+
+        pageTitle.innerText = trip.title; // 改标题
+        switchView(2);
+    }
+
+    // 进入 Level 3: 详情页
+    function openDayDetail(dayIdx) {
+        const dayData = TRIPS[currentTripIdx].days[dayIdx];
+        
+        document.getElementById('detailTitle').innerText = `Day ${dayIdx + 1}: ${dayData.title}`;
+        document.getElementById('detailDesc').innerText = dayData.desc;
+        
+        const photoGrid = document.getElementById('photoGrid');
+        photoGrid.innerHTML = '';
+
+        if (dayData.photos && dayData.photos.length > 0) {
+            dayData.photos.forEach(photoName => {
+                const img = document.createElement('img');
+                img.className = 'photo-item';
+                // 拼接路径：文件夹 + / + 文件名
+                img.src = `${dayData.folder}/${photoName}`; 
+                img.loading = 'lazy';
+                photoGrid.appendChild(img);
+            });
+        } else {
+            photoGrid.innerHTML = '<div style="color:#999;font-size:13px;">( 暂无照片 )</div>';
+        }
+
+        switchView(3);
+    }
+
+    // 页面切换逻辑
+    function switchView(level) {
+        // 隐藏所有
+        Object.values(views).forEach(el => el.classList.remove('active'));
+        // 显示目标
+        views[level].classList.add('active');
+        
+        currentLevel = level;
+        
+        // 控制返回按钮
+        if (level === 1) {
+            backBtn.style.display = 'none';
+            pageTitle.innerText = '我们的旅行';
+        } else {
+            backBtn.style.display = 'block';
+        }
+    }
+
+    // 返回上一级
+    function goBack() {
+        if (currentLevel === 3) {
+            // 从详情回天数列表
+            pageTitle.innerText = TRIPS[currentTripIdx].title;
+            switchView(2);
+        } else if (currentLevel === 2) {
+            // 从天数列表回总旅行列表
+            switchView(1);
+        }
+    }
+
+    // 启动
+    init();
+
+</script>
+</body>
+</html>
