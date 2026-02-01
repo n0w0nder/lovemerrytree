@@ -1,310 +1,311 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart to Heart</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* === 柔和配色方案 (双子蓝 & 巨蟹粉) === */
-        :root {
-            --blue-soft: #e0c3fc;
-            --blue-deep: #66a6ff;
-            --pink-soft: #ffd1ff;
-            --pink-deep: #ff9a9e;
-            --text-main: #555;
-            --glass-bg: rgba(255, 255, 255, 0.75);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heart to Heart</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* === 柔和配色方案 (双子蓝 & 巨蟹粉) === */
+:root {
+--blue-soft: #e0c3fc;
+--blue-deep: #66a6ff;
+--pink-soft: #ffd1ff;
+--pink-deep: #ff9a9e;
+--text-main: #555;
+--glass-bg: rgba(255, 255, 255, 0.75);
+}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: transparent; /* 透出 index.html 的背景 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            color: var(--text-main);
-        }
+body {
+margin: 0;
+min-height: 100vh;
+font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+background: transparent; /* 透出 index.html 的背景 */
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 20px;
+color: var(--text-main);
+}
 
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
+.container {
+width: 100%;
+max-width: 900px;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 30px;
+}
 
-        /* === 卡片通用样式 (毛玻璃) === */
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.8);
-            position: relative;
-            transition: transform 0.3s ease;
-            min-height: 200px;
-        }
-        .card:hover { transform: translateY(-5px); }
+/* === 卡片通用样式 (毛玻璃) === */
+.card {
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border-radius: 20px;
+padding: 25px;
+box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+border: 1px solid rgba(255,255,255,0.8);
+position: relative;
+transition: transform 0.3s ease;
+min-height: 200px;
+}
+.card:hover { transform: translateY(-5px); }
 
-        .card-header {
-            display: flex; align-items: center; margin-bottom: 20px;
-            padding-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.1);
-        }
-        .avatar-small {
-            width: 45px; height: 45px; border-radius: 50%; margin-right: 12px;
-            background-size: cover; background-position: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 2px solid #fff;
-        }
-        .name-tag { font-weight: bold; font-size: 16px; }
-        
-        /* 消息列表 */
-        .msg-list { list-style: none; padding: 0; margin: 0; }
-        .msg-item {
-            background: rgba(255,255,255,0.9);
-            padding: 12px 15px;
-            margin-bottom: 12px;
-            border-radius: 12px;
-            font-size: 15px;
-            line-height: 1.6;
-            color: #444;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            position: relative;
-        }
+.card-header {
+display: flex; align-items: center; margin-bottom: 20px;
+padding-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.1);
+}
+.avatar-small {
+width: 45px; height: 45px; border-radius: 50%; margin-right: 12px;
+background-size: cover; background-position: center;
+box-shadow: 0 4px 8px rgba(0,0,0,0.1); border: 2px solid #fff;
+}
+.name-tag { font-weight: bold; font-size: 16px; }
 
-        /* 左右配色差异 */
-        .blue-card .name-tag { color: var(--blue-deep); }
-        .blue-card .msg-item { border-left: 4px solid var(--blue-deep); }
-        .pink-card .name-tag { color: var(--pink-deep); }
-        .pink-card .msg-item { border-left: 4px solid var(--pink-deep); }
+/* 消息列表 */
+.msg-list { list-style: none; padding: 0; margin: 0; }
+.msg-item {
+background: rgba(255,255,255,0.9);
+padding: 12px 15px;
+margin-bottom: 12px;
+border-radius: 12px;
+font-size: 15px;
+line-height: 1.6;
+color: #444;
+box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+position: relative;
+}
 
-        /* 编辑按钮 */
-        .edit-btn {
-            position: absolute; top: 20px; right: 20px;
-            font-size: 12px; color: #999; cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.1); padding: 4px 10px;
-            border-radius: 15px; background: rgba(255,255,255,0.5);
-            transition: 0.3s;
-        }
-        .edit-btn:hover { background: #fff; color: var(--blue-deep); border-color: var(--blue-deep); }
-        .pink-card .edit-btn:hover { color: var(--pink-deep); border-color: var(--pink-deep); }
+/* 左右配色差异 */
+.blue-card .name-tag { color: var(--blue-deep); }
+.blue-card .msg-item { border-left: 4px solid var(--blue-deep); }
+.pink-card .name-tag { color: var(--pink-deep); }
+.pink-card .msg-item { border-left: 4px solid var(--pink-deep); }
 
-        /* 弹窗编辑器 */
-        #editor-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); z-index: 999;
-            justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #fff; padding: 30px; border-radius: 20px;
-            width: 85%; max-width: 450px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+/* 编辑按钮 */
+.edit-btn {
+position: absolute; top: 20px; right: 20px;
+font-size: 12px; color: #999; cursor: pointer;
+border: 1px solid rgba(0,0,0,0.1); padding: 4px 10px;
+border-radius: 15px; background: rgba(255,255,255,0.5);
+transition: 0.3s;
+}
+.edit-btn:hover { background: #fff; color: var(--blue-deep); border-color: var(--blue-deep); }
+.pink-card .edit-btn:hover { color: var(--pink-deep); border-color: var(--pink-deep); }
 
-        textarea {
-            width: 100%; height: 150px; border: 1px solid #eee;
-            border-radius: 12px; padding: 15px; margin: 15px 0;
-            font-family: inherit; font-size: 14px; resize: none;
-            background: #f9f9f9; outline: none; transition: 0.3s;
-        }
-        textarea:focus { background: #fff; border-color: var(--blue-deep); box-shadow: 0 0 0 3px rgba(102, 166, 255, 0.1); }
-        
-        .btn-group { display: flex; gap: 15px; }
-        button {
-            flex: 1; padding: 12px; border-radius: 12px; border: none;
-            cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;
-        }
-        .cancel-btn { background: #f0f2f5; color: #666; }
-        .cancel-btn:hover { background: #e4e6eb; }
-        .save-btn { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; box-shadow: 0 5px 15px rgba(161, 140, 209, 0.3); }
-        .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(161, 140, 209, 0.4); }
+/* 弹窗编辑器 */
+#editor-modal {
+display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.4); z-index: 999;
+justify-content: center; align-items: center;
+backdrop-filter: blur(5px);
+}
+.modal-content {
+background: #fff; padding: 30px; border-radius: 20px;
+width: 85%; max-width: 450px;
+box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; gap: 20px; }
-            .card { min-height: auto; }
-        }
-    </style>
+textarea {
+width: 100%; height: 150px; border: 1px solid #eee;
+border-radius: 12px; padding: 15px; margin: 15px 0;
+font-family: inherit; font-size: 14px; resize: none;
+background: #f9f9f9; outline: none; transition: 0.3s;
+}
+textarea:focus { background: #fff; border-color: var(--blue-deep); box-shadow: 0 0 0 3px rgba(102, 166, 255, 0.1); }
+
+.btn-group { display: flex; gap: 15px; }
+button {
+flex: 1; padding: 12px; border-radius: 12px; border: none;
+cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;
+}
+.cancel-btn { background: #f0f2f5; color: #666; }
+.cancel-btn:hover { background: #e4e6eb; }
+.save-btn { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; box-shadow: 0 5px 15px rgba(161, 140, 209, 0.3); }
+.save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(161, 140, 209, 0.4); }
+
+@media (max-width: 768px) {
+.container { grid-template-columns: 1fr; gap: 20px; }
+.card { min-height: auto; }
+}
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card blue-card">
-            <div class="edit-btn" onclick="openEditor('宝宝')">✎ 编辑</div>
-            <div class="card-header">
-                <div class="avatar-small" style="background-image: url('m1.jpg');"></div>
-                <span class="name-tag">宝宝的心里话</span>
-            </div>
-            <div class="msg-list" id="list-宝宝">
-                <div style="padding:20px; text-align:center; opacity:0.6; font-size:13px;">正在连接云端...</div>
-            </div>
-        </div>
+<div class="container">
+<div class="card blue-card">
+<div class="edit-btn" onclick="openEditor('宝宝')">✎ 编辑</div>
+<div class="card-header">
+<div class="avatar-small" style="background-image: url('m1.jpg');"></div>
+<span class="name-tag">宝宝的心里话</span>
+</div>
+<div class="msg-list" id="list-宝宝">
+<div style="padding:20px; text-align:center; opacity:0.6; font-size:13px;">正在连接云端...</div>
+</div>
+</div>
 
-        <div class="card pink-card">
-            <div class="edit-btn" onclick="openEditor('家宝')">✎ 编辑</div>
-            <div class="card-header">
-                <div class="avatar-small" style="background-image: url('m2.jpg');"></div>
-                <span class="name-tag">家宝的心里话</span>
-            </div>
-            <div class="msg-list" id="list-家宝">
-                <div style="padding:20px; text-align:center; opacity:0.6; font-size:13px;">正在连接云端...</div>
-            </div>
-        </div>
-    </div>
+<div class="card pink-card">
+<div class="edit-btn" onclick="openEditor('家宝')">✎ 编辑</div>
+<div class="card-header">
+<div class="avatar-small" style="background-image: url('m2.jpg');"></div>
+<span class="name-tag">家宝的心里话</span>
+</div>
+<div class="msg-list" id="list-家宝">
+<div style="padding:20px; text-align:center; opacity:0.6; font-size:13px;">正在连接云端...</div>
+</div>
+</div>
+</div>
 
-    <div id="editor-modal">
-        <div class="modal-content">
-            <h3 id="modal-title" style="margin:0 0 5px 0; color:#333;">编辑内容</h3>
-            <p style="margin:0; font-size: 12px; color: #999;">每写完一句话按回车换行，会自动分成小条目展示。</p>
-            <textarea id="text-input" placeholder="写下你想说的话..."></textarea>
-            <div class="btn-group">
-                <button class="cancel-btn" onclick="closeEditor()">取消</button>
-                <button class="save-btn" onclick="saveData()">✨ 同步到云端</button>
-            </div>
-        </div>
-    </div>
+<div id="editor-modal">
+<div class="modal-content">
+<h3 id="modal-title" style="margin:0 0 5px 0; color:#333;">编辑内容</h3>
+<p style="margin:0; font-size: 12px; color: #999;">每写完一句话按回车换行，会自动分成小条目展示。</p>
+<textarea id="text-input" placeholder="写下你想说的话..."></textarea>
+<div class="btn-group">
+<button class="cancel-btn" onclick="closeEditor()">取消</button>
+<button class="save-btn" onclick="saveData()">✨ 同步到云端</button>
+</div>
+</div>
+</div>
 
 <script>
-    // ==========================================
-    // 👇 这里的钥匙还是填你之前的那一对，不需要变 👇
-    // ==========================================
-    const SUPABASE_URL = 'https://nnyorzfnhikhwcyyqrcm.supabase.co'; 
+// ==========================================
+// 👇 这里的钥匙还是填你之前的那一对，不需要变 👇
+// ==========================================
+const SUPABASE_URL = 'https://nnyorzfnhikhwcyyqrcm.supabase.co'; 
     const SUPABASE_KEY = 'sb_publishable_u6XDQS29...'; // 填你 API Key 里那一长串
-    // ==========================================
+    const SUPABASE_KEY = 'sb_publishable_u6XDQS29-S3rhe7lvremXw__uezkiXc'; // 填你 API Key 里那一长串
+// ==========================================
 
-    // 初始化 Supabase
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    let currentEditingAuthor = '';
+// 初始化 Supabase
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentEditingAuthor = '';
 
-    // 1. 从云端拉取数据
-    async function fetchData() {
-        // 按创建时间排序
-        const { data, error } = await _supabase
-            .from('talk')
-            .select('*')
-            .order('created_at', { ascending: true });
+// 1. 从云端拉取数据
+async function fetchData() {
+// 按创建时间排序
+const { data, error } = await _supabase
+.from('talk')
+.select('*')
+.order('created_at', { ascending: true });
 
-        if (error) {
-            console.error('Error:', error);
-            document.getElementById('list-宝宝').innerHTML = '<div style="color:red;padding:10px;font-size:12px">连接失败，请检查配置</div>';
-            return;
-        }
+if (error) {
+console.error('Error:', error);
+document.getElementById('list-宝宝').innerHTML = '<div style="color:red;padding:10px;font-size:12px">连接失败，请检查配置</div>';
+return;
+}
 
-        // 清空现有内容
-        document.getElementById('list-宝宝').innerHTML = '';
-        document.getElementById('list-家宝').innerHTML = '';
+// 清空现有内容
+document.getElementById('list-宝宝').innerHTML = '';
+document.getElementById('list-家宝').innerHTML = '';
 
-        // 如果没有数据
-        if (data.length === 0) {
-            const emptyTip = '<div style="padding:30px; text-align:center; opacity:0.5; font-size:13px;">( 暂时还没有内容，快点击右上角编辑吧 )</div>';
-            document.getElementById('list-宝宝').innerHTML = emptyTip;
-            document.getElementById('list-家宝').innerHTML = emptyTip;
-            return;
-        }
+// 如果没有数据
+if (data.length === 0) {
+const emptyTip = '<div style="padding:30px; text-align:center; opacity:0.5; font-size:13px;">( 暂时还没有内容，快点击右上角编辑吧 )</div>';
+document.getElementById('list-宝宝').innerHTML = emptyTip;
+document.getElementById('list-家宝').innerHTML = emptyTip;
+return;
+}
 
-        // 渲染数据
-        data.forEach(item => {
-            const author = item.author;
-            let contentArray = [];
-            
-            try {
-                contentArray = JSON.parse(item.content);
-            } catch(e) {
-                contentArray = [item.content];
-            }
-            
-            const listEl = document.getElementById(`list-${author}`);
-            if (listEl) {
-                if (listEl.innerHTML.includes('暂时还没有内容')) listEl.innerHTML = '';
-                
-                contentArray.forEach((text, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'msg-item';
-                    div.innerHTML = `<span style="font-weight:bold; opacity:0.3; margin-right:8px; font-family:Helvetica;">${String(index+1).padStart(2,'0')}</span>${text}`;
-                    listEl.appendChild(div);
-                });
-            }
-        });
-    }
+// 渲染数据
+data.forEach(item => {
+const author = item.author;
+let contentArray = [];
 
-    // 2. 打开编辑器
-    async function openEditor(author) {
-        currentEditingAuthor = author;
-        document.getElementById('modal-title').innerText = `编辑：${author}的心里话`;
-        
-        const { data } = await _supabase
-            .from('talk')
-            .select('content')
-            .eq('author', author)
-            .single();
+try {
+contentArray = JSON.parse(item.content);
+} catch(e) {
+contentArray = [item.content];
+}
 
-        const textarea = document.getElementById('text-input');
-        if (data && data.content) {
-            try {
-                const arr = JSON.parse(data.content);
-                textarea.value = arr.join('\n');
-            } catch (e) {
-                textarea.value = data.content;
-            }
-        } else {
-            textarea.value = '';
-        }
+const listEl = document.getElementById(`list-${author}`);
+if (listEl) {
+if (listEl.innerHTML.includes('暂时还没有内容')) listEl.innerHTML = '';
 
-        document.getElementById('editor-modal').style.display = 'flex';
-    }
+contentArray.forEach((text, index) => {
+const div = document.createElement('div');
+div.className = 'msg-item';
+div.innerHTML = `<span style="font-weight:bold; opacity:0.3; margin-right:8px; font-family:Helvetica;">${String(index+1).padStart(2,'0')}</span>${text}`;
+listEl.appendChild(div);
+});
+}
+});
+}
 
-    function closeEditor() {
-        document.getElementById('editor-modal').style.display = 'none';
-    }
+// 2. 打开编辑器
+async function openEditor(author) {
+currentEditingAuthor = author;
+document.getElementById('modal-title').innerText = `编辑：${author}的心里话`;
 
-    // 3. 保存数据
-    async function saveData() {
-        const rawText = document.getElementById('text-input').value;
-        if (!rawText.trim()) return alert('内容不能为空哦~');
-        
-        const contentArray = rawText.split('\n').filter(t => t.trim() !== '');
-        
-        const saveBtn = document.querySelector('.save-btn');
-        const originalText = saveBtn.innerText;
-        saveBtn.innerText = '⏳ 同步中...';
+const { data } = await _supabase
+.from('talk')
+.select('content')
+.eq('author', author)
+.single();
 
-        try {
-            const { data: existing } = await _supabase
-                .from('talk')
-                .select('id')
-                .eq('author', currentEditingAuthor)
-                .single();
+const textarea = document.getElementById('text-input');
+if (data && data.content) {
+try {
+const arr = JSON.parse(data.content);
+textarea.value = arr.join('\n');
+} catch (e) {
+textarea.value = data.content;
+}
+} else {
+textarea.value = '';
+}
 
-            const jsonContent = JSON.stringify(contentArray);
-            let result;
+document.getElementById('editor-modal').style.display = 'flex';
+}
 
-            if (existing) {
-                result = await _supabase.from('talk').update({ content: jsonContent }).eq('author', currentEditingAuthor);
-            } else {
-                result = await _supabase.from('talk').insert([{ author: currentEditingAuthor, content: jsonContent }]);
-            }
+function closeEditor() {
+document.getElementById('editor-modal').style.display = 'none';
+}
 
-            if (result.error) throw result.error;
+// 3. 保存数据
+async function saveData() {
+const rawText = document.getElementById('text-input').value;
+if (!rawText.trim()) return alert('内容不能为空哦~');
 
-            alert('同步成功！刷新看看吧~');
-            closeEditor();
-            fetchData();
-            
-        } catch (error) {
-            alert('保存失败：' + error.message);
-        } finally {
-            saveBtn.innerText = originalText;
-        }
-    }
+const contentArray = rawText.split('\n').filter(t => t.trim() !== '');
 
-    fetchData();
+const saveBtn = document.querySelector('.save-btn');
+const originalText = saveBtn.innerText;
+saveBtn.innerText = '⏳ 同步中...';
+
+try {
+const { data: existing } = await _supabase
+.from('talk')
+.select('id')
+.eq('author', currentEditingAuthor)
+.single();
+
+const jsonContent = JSON.stringify(contentArray);
+let result;
+
+if (existing) {
+result = await _supabase.from('talk').update({ content: jsonContent }).eq('author', currentEditingAuthor);
+} else {
+result = await _supabase.from('talk').insert([{ author: currentEditingAuthor, content: jsonContent }]);
+}
+
+if (result.error) throw result.error;
+
+alert('同步成功！刷新看看吧~');
+closeEditor();
+fetchData();
+
+} catch (error) {
+alert('保存失败：' + error.message);
+} finally {
+saveBtn.innerText = originalText;
+}
+}
+
+fetchData();
 
 </script>
 </body>
