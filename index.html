@@ -3,60 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FamilySpace | Love OS</title>
+    <title>Quiet Universe | Love OS</title>
     <style>
         :root {
-            --apple-bg: #f5f5f7;
-            --nav-bg: rgba(255, 255, 255, 0.72);
-            --card-bg: rgba(255, 255, 255, 0.6);
+            --nav-bg: rgba(255, 255, 255, 0.7);
             --accent: #0071e3;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, "SF Pro Display", "PingFang SC", sans-serif;
-            background: var(--apple-bg);
-            overflow: hidden; height: 100vh;
+            background: #f5f5f7; overflow: hidden; height: 100vh;
         }
 
-        /* 顶部导航栏 - Apple 官网风格 */
+        /* Apple 风格顶部导航 */
         .top-nav {
-            position: fixed; top: 0; width: 100%; height: 52px;
-            background: var(--nav-bg);
-            backdrop-filter: saturate(180%) blur(20px);
+            position: fixed; top: 0; width: 100%; height: 50px;
+            background: var(--nav-bg); backdrop-filter: saturate(180%) blur(20px);
             -webkit-backdrop-filter: saturate(180%) blur(20px);
             border-bottom: 0.5px solid rgba(0,0,0,0.1);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000;
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-        .nav-content {
-            width: 100%; max-width: 1000px; display: flex; justify-content: space-between; padding: 0 20px;
-        }
-        .nav-links { display: flex; gap: 30px; }
+        .nav-content { width: 100%; max-width: 800px; display: flex; justify-content: space-between; padding: 0 20px; align-items: center; }
+        .logo { font-weight: 600; font-size: 15px; letter-spacing: -0.5px; }
+        .nav-links { display: flex; gap: 25px; }
         .nav-btn {
             background: transparent; border: none; font-size: 13px; color: #1d1d1f;
-            cursor: pointer; opacity: 0.8; transition: 0.3s; font-weight: 400;
+            cursor: pointer; opacity: 0.7; transition: 0.3s;
         }
         .nav-btn:hover, .nav-btn.active { opacity: 1; color: var(--accent); }
 
-        /* 悬浮音乐控制器 */
-        .floating-music {
-            position: fixed; bottom: 30px; right: 30px;
-            background: rgba(0,0,0,0.8); border-radius: 20px;
-            padding: 8px 15px; display: flex; align-items: center; gap: 10px;
-            color: white; font-size: 12px; z-index: 999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        /* 底部音乐挂件 */
+        .music-widget {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 20px;
+            border-radius: 25px; display: flex; align-items: center; gap: 15px;
+            font-size: 12px; z-index: 999; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .music-dot { width: 6px; height: 6px; background: #34c759; border-radius: 50%; animation: blink 1.5s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
+        .play-btn { background: none; border: none; color: white; cursor: pointer; font-size: 14px; }
 
-        main { padding-top: 52px; height: 100vh; }
-        iframe { width: 100%; height: 100%; border: none; }
+        main { padding-top: 50px; height: 100vh; }
+        iframe { width: 100%; height: 100%; border: none; transition: opacity 0.4s; }
     </style>
 </head>
 <body>
     <nav class="top-nav">
         <div class="nav-content">
-            <div style="font-weight: 600; font-size: 14px;">FamilySpace</div>
+            <div class="logo">FamilySpace</div>
             <div class="nav-links">
                 <button class="nav-btn active" onclick="switchTab(this, 'welcome.html')">概览</button>
                 <button class="nav-btn" onclick="switchTab(this, 'travel.html')">旅行</button>
@@ -65,10 +57,9 @@
         </div>
     </nav>
 
-    <div class="floating-music" id="music-trigger">
-        <div class="music-dot"></div>
-        <span id="m-status">交换余生 - JJ Lin</span>
-        <button onclick="toggleMusic()" style="background:none; border:none; color:white; cursor:pointer; font-size:14px;">▶</button>
+    <div class="music-widget">
+        <span id="music-info">🎵 交换余生 - JJ Lin</span>
+        <button class="play-btn" id="master-play">▶</button>
     </div>
 
     <main><iframe id="app-frame" src="welcome.html"></iframe></main>
@@ -77,9 +68,17 @@
         function switchTab(btn, url) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('app-frame').src = url;
+            const frame = document.getElementById('app-frame');
+            frame.style.opacity = 0;
+            setTimeout(() => { frame.src = url; frame.onload = () => frame.style.opacity = 1; }, 300);
         }
-        // 音乐控制逻辑保持之前的 Audio 对象即可
+
+        // 简易音乐逻辑
+        const audio = new Audio('love_story.mp3'); 
+        document.getElementById('master-play').onclick = function() {
+            if (audio.paused) { audio.play(); this.innerText = '||'; }
+            else { audio.pause(); this.innerText = '▶'; }
+        };
     </script>
 </body>
 </html>
