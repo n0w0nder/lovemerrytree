@@ -2,113 +2,97 @@
 <html lang="zh">
 <head>
     <style>
-        body { margin: 0; padding: 40px 20px; background: #f5f5f7; font-family: -apple-system, sans-serif; color: #1d1d1f; }
-        .hero { text-align: center; margin-top: 60px; margin-bottom: 80px; }
+        body { margin: 0; padding: 60px 20px; background: #f5f5f7; font-family: -apple-system, sans-serif; color: #1d1d1f; display: flex; flex-direction: column; align-items: center; }
         
-        /* 高级感姓名展示 */
+        /* 1. 高级感姓名区 */
+        .hero { text-align: center; margin-bottom: 60px; }
         .names {
-            font-size: 80px; font-weight: 700; letter-spacing: -4px; margin-bottom: 10px;
-            background: linear-gradient(180deg, #1d1d1f 30%, rgba(29,29,31,0.1));
+            font-size: 64px; font-weight: 700; letter-spacing: -3px; margin-bottom: 10px;
+            background: linear-gradient(180deg, #1d1d1f 40%, rgba(29,29,31,0.2));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .hero p { font-size: 17px; color: #86868b; letter-spacing: 5px; text-transform: uppercase; }
+        .hero p { font-size: 14px; color: #86868b; letter-spacing: 6px; text-transform: uppercase; margin-top: 10px; }
 
-        /* Widget 布局 */
-        .widget-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
-            max-width: 800px; margin: 0 auto 60px;
-        }
-        .widget {
-            background: #fff; border-radius: 28px; padding: 25px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04); transition: 0.4s;
-        }
-        .widget:hover { transform: scale(1.02); }
-        .widget-label { font-size: 13px; font-weight: 600; color: #86868b; margin-bottom: 10px; display: block;}
-        .widget-num { font-size: 48px; font-weight: 700; letter-spacing: -2px; }
+        /* 2. iOS Widget 卡片 */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-bottom: 50px; }
+        .widget { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 0.5px solid rgba(0,0,0,0.05); }
+        .widget-label { font-size: 11px; font-weight: 600; color: #86868b; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .widget-val { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+        .widget-unit { font-size: 14px; font-weight: 400; color: #86868b; margin-left: 4px; }
 
-        /* iOS 通知中心时间轴 */
-        .timeline-container { max-width: 600px; margin: 0 auto; }
-        .timeline-title { font-size: 22px; font-weight: 600; margin-bottom: 20px; padding-left: 10px; }
+        /* 3. iOS 通知中心时间轴 */
+        .timeline { width: 100%; max-width: 500px; }
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 15px; padding-left: 5px; }
         
-        .ios-notification {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(15px); border-radius: 22px;
-            padding: 16px 20px; margin-bottom: 10px;
-            border: 0.5px solid rgba(0,0,0,0.05);
-            cursor: pointer; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden; max-height: 70px; /* 初始高度 */
+        .ios-card {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px);
+            border-radius: 20px; padding: 15px 20px; margin-bottom: 10px;
+            border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden; max-height: 70px; /* 默认闭合高度 */
         }
-        .ios-notification.expanded { max-height: 300px; background: #fff; transform: scale(1.02); box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
+        .ios-card.open { max-height: 300px; background: white; transform: scale(1.02); box-shadow: 0 15px 40px rgba(0,0,0,0.05); }
         
-        .notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .notif-app { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #86868b; }
-        .notif-icon { width: 18px; height: 18px; background: var(--accent); border-radius: 4px; }
-        .notif-time { font-size: 12px; color: #86868b; }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .app-tag { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #86868b; }
+        .app-icon { width: 16px; height: 16px; border-radius: 4px; background: #0071e3; }
+        .card-date { font-size: 11px; color: #86868b; }
         
-        .notif-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-        .notif-body { font-size: 14px; color: #424245; line-height: 1.4; opacity: 0; transition: 0.3s; }
-        .expanded .notif-body { opacity: 1; }
+        .card-title { font-size: 15px; font-weight: 600; color: #1d1d1f; }
+        .card-body { font-size: 14px; color: #424245; line-height: 1.5; margin-top: 10px; opacity: 0; transition: 0.3s; }
+        .open .card-body { opacity: 1; }
 
-        @media (max-width: 768px) {
-            .names { font-size: 48px; }
-            .widget-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 600px) { .names { font-size: 40px; } .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="hero">
         <div class="names">张亦宸 & 杨沁宜</div>
-        <p>A Gentle Universe</p>
+        <p>Wind meets Water</p>
     </div>
 
-    <div class="widget-grid">
+    <div class="grid">
         <div class="widget">
             <span class="widget-label">相识至今</span>
-            <div class="widget-num" id="d-meet">0<small style="font-size:16px; font-weight:400; color:#86868b"> Days</small></div>
+            <div class="widget-val" id="d-meet">0<span class="widget-unit">Days</span></div>
         </div>
         <div class="widget">
-            <span class="widget-label">在一起</span>
-            <div class="widget-num" id="d-love">0<small style="font-size:16px; font-weight:400; color:#86868b"> Days</small></div>
+            <span class="widget-label">心盒开启</span>
+            <div class="widget-val" id="d-love">0<span class="widget-unit">Days</span></div>
         </div>
     </div>
 
-    <div class="timeline-container">
-        <div class="timeline-title">时间轴</div>
+    <div class="timeline">
+        <div class="section-title">我们的瞬间</div>
         
-        <!-- 卡片 1 -->
-        <div class="ios-notification" onclick="this.classList.toggle('expanded')">
-            <div class="notif-header">
-                <div class="notif-app"><div class="notif-icon" style="background:#ff9500"></div>初见</div>
-                <div class="notif-time">2024.08.22</div>
+        <!-- 事件 1 -->
+        <div class="ios-card" onclick="this.classList.toggle('open')">
+            <div class="card-head">
+                <div class="app-tag"><div class="app-icon" style="background:#ff9500"></div>Memory</div>
+                <div class="card-date">2024.08.22</div>
             </div>
-            <div class="notif-title">在那个夏末，风遇见了水</div>
-            <div class="notif-body">
-                这是我们故事的起点。从这一天起，平行线开始交织。虽然当时还不知道未来会发生什么，但缘分已经悄然埋下了种子。
-            </div>
+            <div class="card-title">初次相遇的那个午后</div>
+            <div class="card-body">那天空气里带着一点潮湿，那是我们故事的第 1 页。谁也没想到，这次普通的见面，会变成余生的开场白。</div>
         </div>
 
-        <!-- 卡片 2 -->
-        <div class="ios-notification" onclick="this.classList.toggle('expanded')">
-            <div class="notif-header">
-                <div class="notif-app"><div class="notif-icon" style="background:#34c759"></div>上海之约</div>
-                <div class="notif-time">2026.01.22</div>
+        <!-- 事件 2 -->
+        <div class="ios-card" onclick="this.classList.toggle('open')">
+            <div class="card-head">
+                <div class="app-tag"><div class="app-icon" style="background:#34c759"></div>Trip</div>
+                <div class="card-date">2026.01.22</div>
             </div>
-            <div class="notif-title">蟠龙天地的第一顿饭</div>
-            <div class="notif-body">
-                终于见到了。在上海的冬日里，感受到了真实的温度。那一刻的开心是无法用言语形容的。
-            </div>
+            <div class="card-title">上海：见到了真实的彼此</div>
+            <div class="card-body">从蟠龙新天地的第一顿饭开始，这一周的上海之行，让我们在城市的人潮里确认了对方的心跳。</div>
         </div>
 
-        <!-- 卡片 3 -->
-        <div class="ios-notification" onclick="this.classList.toggle('expanded')">
-            <div class="notif-header">
-                <div class="notif-app"><div class="notif-icon" style="background:#ff2d55"></div>确立关系</div>
-                <div class="notif-time">2025.09.12</div>
+        <!-- 事件 3 -->
+        <div class="ios-card" onclick="this.classList.toggle('open')">
+            <div class="card-head">
+                <div class="app-tag"><div class="app-icon" style="background:#ff2d55"></div>Forever</div>
+                <div class="card-date">2025.09.12</div>
             </div>
-            <div class="notif-title">开始，我们的正式乐章</div>
-            <div class="notif-body">
-                2025 年的秋天，我们决定一起走向未来。不再是“我”，而是“我们”。
-            </div>
+            <div class="card-title">2025 年的秋天，正式在一起</div>
+            <div class="card-body">那是我们承诺的起点。从此以后，所有的风景都有了共同的名字。</div>
         </div>
     </div>
 
@@ -119,7 +103,7 @@
             const now = new Date();
             document.getElementById('d-meet').firstChild.textContent = Math.floor((now - dateMet)/(1000*60*60*24));
             const diffLove = Math.floor((now - dateLove)/(1000*60*60*24));
-            document.getElementById('d-love').firstChild.textContent = diffLove < 0 ? "Coming" : diffLove;
+            document.getElementById('d-love').firstChild.textContent = diffLove < 0 ? "Soon" : diffLove;
         }
         update();
     </script>
