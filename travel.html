@@ -14,73 +14,40 @@
             --text-main: #444;
         }
 
-        body {
-            margin: 0; min-height: 100vh; background: transparent;
-            font-family: 'PingFang SC', sans-serif; padding: 20px; overflow-x: hidden; 
-        }
+        body { margin: 0; min-height: 100vh; background: transparent; font-family: 'PingFang SC', sans-serif; padding: 20px; overflow-x: hidden; }
         ::-webkit-scrollbar { display: none; }
-
         .container { max-width: 900px; margin: 0 auto; position: relative; min-height: 80vh; }
 
-        /* === 顶部导航栏 === */
         .header { display: flex; align-items: center; margin-bottom: 20px; animation: fadeIn 0.5s; }
-        .back-btn {
-            background: #fff; border: none; padding: 8px 15px; border-radius: 20px; 
-            cursor: pointer; color: #666; box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-            margin-right: 15px; display: none; font-size: 14px; transition: 0.2s;
-        }
+        .back-btn { background: #fff; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; color: #666; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-right: 15px; display: none; font-size: 14px; transition: 0.2s; }
         .back-btn:hover { transform: translateX(-3px); color: var(--primary-color); }
         .page-title { font-size: 22px; font-weight: bold; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .view-section { display: none; animation: slideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         .view-section.active { display: block; }
 
-        /* === 地图卡片区 === */
-        .map-card {
-            background: var(--glass-bg); border-radius: 20px; padding: 15px;
-            margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            backdrop-filter: blur(10px);
-        }
-        .map-title {
-            text-align: center; font-size: 16px; font-weight: bold; color: #666; 
-            margin-bottom: 10px; letter-spacing: 2px;
-        }
+        .map-card { background: var(--glass-bg); border-radius: 20px; padding: 15px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); backdrop-filter: blur(10px); }
+        .map-title { text-align: center; font-size: 16px; font-weight: bold; color: #666; margin-bottom: 10px; letter-spacing: 2px; }
         #china-map { width: 100%; height: 350px; }
 
-        /* === 1. 旅行列表 (Level 1) === */
-        .trip-card {
-            background: var(--glass-bg); border-radius: 16px; padding: 20px;
-            margin-bottom: 20px; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
+        .trip-card { background: var(--glass-bg); border-radius: 16px; padding: 20px; margin-bottom: 20px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .trip-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .trip-cover {
-            width: 80px; height: 80px; border-radius: 12px;
-            background-size: cover; background-position: center;
-            margin-right: 20px; flex-shrink: 0; border: 2px solid #fff;
-        }
+        .trip-cover { width: 80px; height: 80px; border-radius: 12px; background-size: cover; background-position: center; margin-right: 20px; flex-shrink: 0; border: 2px solid #fff; }
         .trip-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
         .trip-info p { margin: 0; font-size: 13px; color: #888; }
         .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
 
-        /* === 2. 天数网格 (Level 2) === */
         .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .day-box {
-            background: rgba(255,255,255,0.9); border-radius: 15px; aspect-ratio: 1/1; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 2px solid transparent;
-        }
+        .day-box { background: rgba(255,255,255,0.9); border-radius: 15px; aspect-ratio: 1/1; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 2px solid transparent; }
         .day-box:hover { transform: scale(1.05); border-color: var(--primary-color); color: var(--primary-color); }
-        .day-num { font-size: 24px; font-weight: bold; font-family: 'Helvetica Neue', sans-serif; }
+        .day-num { font-size: 24px; font-weight: bold; }
         .day-label { font-size: 12px; color: #999; margin-top: 5px; text-align: center; padding: 0 5px;}
 
-        /* === 3. 详情内容 (Level 3) === */
         .detail-card { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .detail-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; border-left: 5px solid var(--secondary-color); padding-left: 15px; color: #333; }
         .detail-desc { font-size: 15px; color: #555; line-height: 1.8; margin-bottom: 30px; }
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .photo-item { width: 100%; aspect-ratio: 1/1; border-radius: 10px; object-fit: cover; cursor: zoom-in; transition: transform 0.3s; background: #eee; }
-        .photo-item:hover { transform: scale(1.03); }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -95,12 +62,10 @@
         </div>
 
         <div id="tripListView" class="view-section active">
-            
             <div class="map-card">
-                <div class="map-title">📍 点亮我们的专属中国</div>
+                <div class="map-title">📍 我们的爱情足迹</div>
                 <div id="china-map"></div>
             </div>
-
             <div id="tripListContent"></div>
         </div>
 
@@ -118,9 +83,6 @@
     </div>
 
 <script>
-    // ===============================================
-    // 🛠️ 小工具：自动生成照片数组
-    // ===============================================
     function getPhotos(count) {
         let photos = [];
         for (let i = 1; i <= count; i++) { photos.push(i + '.jpg'); }
@@ -128,26 +90,18 @@
     }
 
     // ===============================================
-    // 📍 城市经纬度字典 (用来精确到市点亮光点)
-    // 如果以后去了新城市，去百度搜“XX市经纬度”，加到这里面即可
-    // 格式：'城市名': [经度, 纬度]
+    // 📍 城市经纬度字典 (已补全北京、福州、漳州)
     // ===============================================
     const CITY_COORDS = {
         '上海': [121.4737, 31.2304],
         '北京': [116.4053, 39.9050],
-        '广州': [113.2806, 23.1252],
-        '深圳': [114.0859, 22.5470],
-        '杭州': [120.1536, 30.2875],
-        '成都': [104.0657, 30.6595],
-        '重庆': [106.5050, 29.5332],
-        '南京': [118.7674, 32.0415],
-        '苏州': [120.6196, 31.2994],
-        '三亚': [109.5083, 18.2479],
-        // 你可以随时在下面添加新城市...
+        '福州': [119.2965, 26.0745],
+        '漳州': [117.6618, 24.5108],
+        '厦门': [118.0894, 24.4798]
     };
 
     // ===============================================
-    // ✈️ 旅行数据配置中心
+    // ✈️ 旅行数据配置中心 (已添加北京和福建行)
     // ===============================================
     const TRIPS = [
         {
@@ -155,101 +109,82 @@
             title: '上海行',
             date: '2026年1月22日 - 1月29日',
             cover: 'SHD1/1.jpg', 
-            city: '上海', // ⭐ 地图会读取这个字段，去点亮对应的城市！
+            city: '上海',
             days: [
-                { title: '终于见到了', desc: '去了蟠龙新天地和家宝还有叔叔阿姨一起吃了一顿饭。开心！', folder: 'SHD1', photos: getPhotos(5) },
-                { title: '迪士尼之旅', desc: '和家宝畅玩一天，非常开心，下次进去一定坐极速光轮（家宝好香）', folder: 'SHD2', photos: getPhotos(16) },
-                { title: '天文馆', desc: '倒腾三线地铁来到水滴湖郊区天文馆，望远镜看月球和木星真清楚，影院也相当不错', folder: 'SHD3', photos: getPhotos(9) },
-                { title: '南京东路—博物馆—外滩', desc: '成功给家宝“种草”，差点被一拳打飞哈哈，外滩家宝大摄影师拍的真好看', folder: 'SHD4', photos: getPhotos(9) },
-                { title: '背着老爸来约会', desc: '拍拍拍！', folder: 'SHD5', photos: getPhotos(9) },
-                { title: '叔叔阿姨又请吃饭', desc: '叔叔在家宝不怎么说话，我也感到压迫/(ㄒoㄒ)/~~', folder: 'SHD6', photos: getPhotos(3) },
-                { title: '淮海路——新天地city walk', desc: '家宝请我吃鼎泰丰，蟹黄包好好吃，在淮海路就是逛逛拍拍拍，怎么拍家宝怎么好看，两个人找不到路笑死了，还在公园背着家宝拍影子', folder: 'SHD7', photos: getPhotos(18) },
-                { title: '离别之际', desc: '没想到一周那么快过去，和家宝的一周约会也告一尾声，家宝是个非常有才华、理性的女孩子，开心。时光匆匆但为更好的遇见，爱你家宝。', folder: 'SHD8', photos: getPhotos(4) }
+                { title: '终于见到了', desc: '去了蟠龙新天地和家宝还有叔叔阿姨一起吃了一顿饭。', folder: 'SHD1', photos: getPhotos(5) },
+                { title: '迪士尼之旅', desc: '下次进去一定坐极速光轮', folder: 'SHD2', photos: getPhotos(16) },
+                { title: '天文馆', desc: '望远镜看月球和木星真清楚', folder: 'SHD3', photos: getPhotos(9) },
+                { title: '南京东路外滩', desc: '家宝大摄影师拍的真好看', folder: 'SHD4', photos: getPhotos(9) },
+                { title: '背着老爸来约会', desc: '拍拍拍', folder: 'SHD5', photos: getPhotos(9) },
+                { title: '叔叔阿姨又请吃饭', desc: '叔叔在家宝不怎么说话...', folder: 'SHD6', photos: getPhotos(3) },
+                { title: '淮海路city walk', desc: '怎么拍家宝怎么好看', folder: 'SHD7', photos: getPhotos(18) },
+                { title: '离别之际', desc: '时光匆匆但为更好的遇见', folder: 'SHD8', photos: getPhotos(4) }
+            ]
+        },
+        {
+            id: 'beijing',
+            title: '北京之约',
+            date: '待更新',
+            cover: 'BJ/1.jpg', 
+            city: '北京',
+            days: [
+                { title: '紫禁城下', desc: '和家宝在故宫红墙下...', folder: 'BJ', photos: getPhotos(1) }
+            ]
+        },
+        {
+            id: 'fuzhou',
+            title: '福州记忆',
+            date: '待更新',
+            cover: 'FZ/1.jpg', 
+            city: '福州',
+            days: [
+                { title: '三坊七巷', desc: '逛逛吃吃，福州肉燕真好吃', folder: 'FZ', photos: getPhotos(1) }
+            ]
+        },
+        {
+            id: 'zhangzhou',
+            title: '漳州时光',
+            date: '待更新',
+            cover: 'ZZ/1.jpg', 
+            city: '漳州',
+            days: [
+                { title: '古城漫步', desc: '漳州的慢生活，家宝很喜欢', folder: 'ZZ', photos: getPhotos(1) }
             ]
         }
-        // 以后去了新地方，复制上面的一大块，改掉 city: '北京'，地图就会自动多亮一个点！
     ];
 
-    // ===============================================
-    // 🧠 逻辑与渲染区
-    // ===============================================
     let currentLevel = 1; 
     let currentTripIdx = 0;
     const backBtn = document.getElementById('backBtn');
     const pageTitle = document.getElementById('pageTitle');
-    const views = {
-        1: document.getElementById('tripListView'),
-        2: document.getElementById('daysListView'),
-        3: document.getElementById('detailView')
-    };
+    const views = { 1: document.getElementById('tripListView'), 2: document.getElementById('daysListView'), 3: document.getElementById('detailView') };
 
-    // 初始化：渲染旅行列表 & 地图
     function init() {
         const listContainer = document.getElementById('tripListContent');
         listContainer.innerHTML = '';
-        
-        let mapData = []; // 收集所有去过的城市给地图用
-
+        let mapData = [];
         TRIPS.forEach((trip, index) => {
-            // 生成卡片
             const card = document.createElement('div');
             card.className = 'trip-card';
             card.onclick = () => openTrip(index);
-            card.innerHTML = `
-                <div class="trip-cover" style="background-image: url('${trip.cover}')"></div>
-                <div class="trip-info"><h3>${trip.title}</h3><p>📅 ${trip.date}</p></div>
-                <div class="arrow">➜</div>
-            `;
+            card.innerHTML = `<div class="trip-cover" style="background-image: url('${trip.cover}')"></div><div class="trip-info"><h3>${trip.title}</h3><p>📅 ${trip.date}</p></div><div class="arrow">➜</div>`;
             listContainer.appendChild(card);
-
-            // 收集地图数据
             if (trip.city && CITY_COORDS[trip.city]) {
-                mapData.push({
-                    name: trip.city,
-                    value: [...CITY_COORDS[trip.city], 100] // 100 是光点的大小权重
-                });
+                mapData.push({ name: trip.city, value: [...CITY_COORDS[trip.city], 100] });
             }
         });
-
-        // 渲染地图
         renderMap(mapData);
     }
 
-    // 绘制中国地图特效
     function renderMap(mapData) {
         const myChart = echarts.init(document.getElementById('china-map'));
-        const option = {
-            tooltip: { trigger: 'item', formatter: '{b}' }, // 鼠标放上去显示城市名
-            geo: {
-                map: 'china',
-                roam: true, // 允许缩放和拖拽
-                zoom: 1.2,
-                label: { emphasis: { show: false } },
-                itemStyle: {
-                    normal: { areaColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(161, 140, 209, 0.4)' },
-                    emphasis: { areaColor: 'rgba(224, 195, 252, 0.5)' } // 鼠标划过省份的颜色
-                }
-            },
-            series: [
-                {
-                    type: 'effectScatter', // 呼吸灯特效点
-                    coordinateSystem: 'geo',
-                    data: mapData,
-                    symbolSize: 12, // 光点大小
-                    showEffectOn: 'render',
-                    rippleEffect: { brushType: 'stroke', scale: 4 }, // 波纹特效
-                    label: { normal: { formatter: '{b}', position: 'right', show: true, color: '#ff9a9e', fontWeight: 'bold' } },
-                    itemStyle: { normal: { color: '#ff9a9e', shadowBlur: 10, shadowColor: '#ff9a9e' } }, // 巨蟹粉光效
-                    zlevel: 1
-                }
-            ]
-        };
-        myChart.setOption(option);
-        // 随窗口自适应
-        window.addEventListener('resize', () => myChart.resize());
+        myChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}' },
+            geo: { map: 'china', roam: true, zoom: 1.2, itemStyle: { normal: { areaColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(161, 140, 209, 0.4)' }, emphasis: { areaColor: 'rgba(224, 195, 252, 0.5)' } } },
+            series: [{ type: 'effectScatter', coordinateSystem: 'geo', data: mapData, symbolSize: 12, showEffectOn: 'render', rippleEffect: { brushType: 'stroke', scale: 4 }, label: { normal: { formatter: '{b}', position: 'right', show: true, color: '#ff9a9e', fontWeight: 'bold' } }, itemStyle: { normal: { color: '#ff9a9e', shadowBlur: 10, shadowColor: '#ff9a9e' } }, zlevel: 1 }]
+        });
     }
 
-    // 进入 Level 2
     function openTrip(index) {
         currentTripIdx = index;
         const trip = TRIPS[index];
@@ -266,7 +201,6 @@
         switchView(2);
     }
 
-    // 进入 Level 3
     function openDayDetail(dayIdx) {
         const dayData = TRIPS[currentTripIdx].days[dayIdx];
         document.getElementById('detailTitle').innerText = `Day ${dayIdx + 1}: ${dayData.title}`;
@@ -278,17 +212,13 @@
                 const img = document.createElement('img');
                 img.className = 'photo-item';
                 img.src = `${dayData.folder}/${photoName}`; 
-                img.loading = 'lazy';
                 img.onclick = () => window.open(img.src);
                 photoGrid.appendChild(img);
             });
-        } else {
-            photoGrid.innerHTML = '<div style="color:#999;font-size:13px;">( 暂无照片 )</div>';
         }
         switchView(3);
     }
 
-    // 页面切换
     function switchView(level) {
         Object.values(views).forEach(el => el.classList.remove('active'));
         views[level].classList.add('active');
