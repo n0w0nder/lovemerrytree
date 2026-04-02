@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Our Space</title>
+    <title>Our Space - 国风版</title>
     <style>
-        /* === 柔和配色方案 (双子蓝 & 巨蟹粉) === */
+        /* === 继承主页的国风配色 === */
         :root {
-            --blue-soft: #a1c4fd;
-            --blue-deep: #4facfe;
-            --pink-soft: #fbc2eb;
-            --pink-deep: #a6c1ee; /* 渐变用 */
-            --glass-bg: rgba(255, 255, 255, 0.65);
-            --text-main: #555;
+            --ink-black: #2b2b2b; /* 浓墨 */
+            --ink-gray: #707070; /* 淡墨 */
+            --cinnabar: #a7322e; /* 朱砂红 */
+            --border-color: #d4ccb8; /* 古朴边框 */
         }
 
         * { box-sizing: border-box; }
@@ -24,112 +22,112 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: transparent; /* 透出 index 的背景 */
-            color: var(--text-main);
+            /* 字体调用宋体/楷体 */
+            font-family: 'KaiTi', 'STKaiti', 'Noto Serif SC', 'Songti SC', serif;
+            background: transparent; /* 透出 index 的宣纸底色 */
+            color: var(--ink-black);
             overflow: hidden;
             padding: 20px;
         }
 
-        /* 主卡片容器 */
+        /* 主卡片：改为古朴的线框画卷风格 */
         .main-card {
             background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 40px 50px;
-            border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.8);
+            padding: 50px;
+            border: 1px solid var(--border-color);
+            position: relative;
             text-align: center;
             width: 100%;
             max-width: 800px;
-            animation: fadeIn 1s ease-out;
+            animation: fadeIn 1.5s ease-out;
         }
+        
+        /* 画卷的四角装饰点 */
+        .main-card::before, .main-card::after {
+            content: ''; position: absolute; width: 6px; height: 6px;
+            background: var(--cinnabar); border-radius: 50%; opacity: 0.6;
+        }
+        .main-card::before { top: 10px; left: 10px; box-shadow: 668px 0 var(--cinnabar); }
+        .main-card::after { bottom: 10px; left: 10px; box-shadow: 668px 0 var(--cinnabar); }
 
         /* 顶部名字区域 */
         .header-section {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            gap: 40px;
             margin-bottom: 50px;
-            padding: 0 20px;
         }
 
         .person { text-align: center; }
         
-        /* 星座图标背景 */
-        .zodiac-icon {
-            width: 80px; height: 80px;
-            border-radius: 50%;
+        /* 朱砂印章风格的星座图标 */
+        .zodiac-stamp {
+            width: 50px; height: 50px;
+            border: 2px solid var(--cinnabar);
+            border-radius: 8px;
             display: flex; justify-content: center; align-items: center;
             margin: 0 auto 15px auto;
-            font-size: 32px;
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            font-size: 20px;
+            color: var(--cinnabar);
+            font-weight: bold;
+            transform: rotate(-3deg);
+            opacity: 0.9;
+            transition: transform 0.4s;
         }
-        .zodiac-icon:hover { transform: scale(1.1) rotate(10deg); }
+        .female .zodiac-stamp { transform: rotate(4deg); }
+        .person:hover .zodiac-stamp { transform: scale(1.1) rotate(0); }
 
-        .male .zodiac-icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .female .zodiac-icon { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .name { font-size: 22px; margin-bottom: 5px; letter-spacing: 4px; }
+        .zodiac-name { font-size: 12px; color: var(--ink-gray); letter-spacing: 2px; }
 
-        .name { font-size: 20px; font-weight: bold; margin-bottom: 5px; letter-spacing: 2px; }
-        .male .name { color: #4facfe; }
-        .female .name { color: #ff9a9e; }
-        
-        .zodiac-name { font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* 中间爱心 */
+        /* 中间结缘 */
         .heart-divider {
-            font-size: 24px; color: #ff9a9e; animation: beat 1.5s infinite;
+            font-size: 18px; color: var(--cinnabar); 
+            display: flex; flex-direction: column; align-items: center;
+            gap: 5px; opacity: 0.8;
         }
+        .heart-divider span { font-size: 12px; color: var(--ink-gray); writing-mode: vertical-lr; letter-spacing: 2px; }
 
         /* 计时器区域 */
         .timer-container {
             display: flex;
-            gap: 20px;
+            gap: 40px;
             justify-content: center;
+            border-top: 1px dashed var(--border-color);
+            border-bottom: 1px dashed var(--border-color);
+            padding: 30px 0;
+            margin-top: 20px;
         }
 
-        .timer-box {
-            flex: 1;
-            background: rgba(255,255,255,0.6);
-            padding: 30px 20px;
-            border-radius: 20px;
-            border: 1px solid #fff;
-            transition: transform 0.3s;
-        }
-        .timer-box:hover { transform: translateY(-5px); background: rgba(255,255,255,0.9); }
+        .timer-box { flex: 1; transition: transform 0.3s; }
+        .timer-box:hover { transform: translateY(-3px); }
 
-        .timer-label { font-size: 14px; color: #888; margin-bottom: 8px; letter-spacing: 1px; }
-        .timer-date { font-size: 14px; color: #aaa; margin-bottom: 20px; }
+        .timer-label { font-size: 18px; color: var(--ink-black); margin-bottom: 10px; letter-spacing: 2px; }
+        .timer-date { font-size: 13px; color: var(--ink-gray); margin-bottom: 20px; font-family: sans-serif; letter-spacing: 1px; }
         
         .timer-number {
-            font-size: 48px; font-weight: bold;
-            font-family: 'Helvetica Neue', sans-serif;
-            background: -webkit-linear-gradient(45deg, #4facfe, #ff9a9e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 46px; font-weight: normal;
+            font-family: 'Times New Roman', serif; /* 衬线数字更有韵味 */
+            color: var(--cinnabar);
         }
-        .timer-unit { font-size: 14px; color: #999; margin-left: 5px; }
+        .timer-unit { font-size: 14px; color: var(--ink-gray); margin-left: 5px; }
 
         /* 底部标语 */
         .footer-quote {
             margin-top: 40px;
-            font-size: 14px;
-            color: #888;
-            font-style: italic;
-            opacity: 0.8;
-            font-family: "Times New Roman", serif;
+            font-size: 15px;
+            color: var(--ink-gray);
+            letter-spacing: 3px;
         }
 
-        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; filter: blur(5px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 
         @media (max-width: 768px) {
-            .timer-container { flex-direction: column; }
-            .header-section { padding: 0; }
-            .main-card { padding: 30px 20px; }
+            .timer-container { flex-direction: column; gap: 30px; }
+            .header-section { gap: 20px; }
+            .main-card { padding: 40px 20px; border: none; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
+            .main-card::before, .main-card::after { display: none; }
         }
     </style>
 </head>
@@ -138,78 +136,65 @@
     <div class="main-card">
         <div class="header-section">
             <div class="person male">
-                <div class="zodiac-icon">♊</div> <div class="name">张亦宸</div>
+                <div class="zodiac-stamp">双子</div> <div class="name">张亦宸</div>
                 <div class="zodiac-name">GEMINI</div>
             </div>
 
-            <div class="heart-divider">♥</div>
+            <div class="heart-divider">
+                <span>结缘</span>
+                <div style="font-size: 8px;">●</div>
+            </div>
 
             <div class="person female">
-                <div class="zodiac-icon">♋</div> <div class="name">杨沁宜</div>
+                <div class="zodiac-stamp">巨蟹</div> <div class="name">杨沁宜</div>
                 <div class="zodiac-name">CANCER</div>
             </div>
         </div>
 
         <div class="timer-container">
             <div class="timer-box">
-                <div class="timer-label">The Encounter (相识)</div>
-                <div class="timer-date">2024.08.22</div>
+                <div class="timer-label">相识之约</div>
+                <div class="timer-date">二〇二四年八月二十二日</div>
                 <div>
                     <span class="timer-number" id="days-meet">0</span>
-                    <span class="timer-unit">days</span>
+                    <span class="timer-unit">日</span>
                 </div>
             </div>
 
             <div class="timer-box">
-                <div class="timer-label">The Beginning (相恋)</div>
-                <div class="timer-date">2025.09.12</div>
+                <div class="timer-label">相恋之始</div>
+                <div class="timer-date">二〇二五年九月十二日</div>
                 <div>
                     <span class="timer-number" id="days-love">0</span>
-                    <span class="timer-unit">days</span>
+                    <span class="timer-unit">日</span>
                 </div>
             </div>
         </div>
 
         <div class="footer-quote">
-            Wind meets Water, a Gentle Universe.
+            风水相逢，宇宙温柔
         </div>
     </div>
 
 <script>
     // ==========================================
-    // 📅 日期配置 (这里已经帮你修正好了！)
-    // 注意：月份是 0-11，所以 7 代表 8月，8 代表 9月
+    // 📅 日期配置 (月份是 0-11，所以 7=8月，8=9月)
     // ==========================================
-    
-    // 1. 相识日期：2024年8月22日
     const dateMeet = new Date(2024, 7, 22); 
-    
-    // 2. 相恋日期：2025年9月12日
     const dateLove = new Date(2025, 8, 12); 
 
-    // ==========================================
-
     function updateTimers() {
-        const now = new Date(); // 获取当前时间
+        const now = new Date(); 
 
-        // 计算相识天数
         const diffMeet = now - dateMeet;
-        const daysMeet = Math.floor(diffMeet / (1000 * 60 * 60 * 24));
-        document.getElementById('days-meet').innerText = daysMeet;
+        document.getElementById('days-meet').innerText = Math.floor(diffMeet / (1000 * 60 * 60 * 24));
 
-        // 计算相恋天数
-        // 如果现在还没到 2025-9-12，显示的可能是负数，这里做一个简单的处理
-        // 不过你们已经是 2026年了，所以肯定是正数
         const diffLove = now - dateLove;
-        const daysLove = Math.floor(diffLove / (1000 * 60 * 60 * 24));
-        document.getElementById('days-love').innerText = daysLove;
+        document.getElementById('days-love').innerText = Math.floor(diffLove / (1000 * 60 * 60 * 24));
     }
 
-    // 启动计时器
     updateTimers();
-    // 每天检查更新一次（其实每次刷新页面都会更，不用setInterval也行）
     setInterval(updateTimers, 1000 * 60 * 60); 
-
 </script>
 </body>
 </html>
