@@ -3,103 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家宝 & 宝宝 | Secret Space</title>
+    <title>家宝 & 宝宝 | 纸短情长</title>
     <style>
+        /* === 国风配色系统 === */
         :root {
-            --primary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            --glass-bg: rgba(255, 255, 255, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.8);
-            --text-main: #4a4a4a;
-            --text-sub: #888;
-            --active-shadow: 0 4px 15px rgba(251, 194, 235, 0.4);
+            --paper-bg: #f6f4ec; /* 宣纸白 */
+            --ink-black: #2b2b2b; /* 浓墨 */
+            --ink-gray: #707070; /* 淡墨 */
+            --cinnabar: #a7322e; /* 朱砂红 */
+            --border-color: #e3dccb; /* 旧纸边缘 */
+            --active-bg: rgba(167, 50, 46, 0.05); /* 朱砂淡晕染 */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
         
         body { 
-            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
-            color: var(--text-main);
+            /* 优先调用衬线字体（宋体/楷体）展现古风 */
+            font-family: 'KaiTi', 'STKaiti', 'Noto Serif SC', 'Songti SC', serif;
+            background-color: var(--paper-bg);
+            /* 叠加一层极淡的水墨晕染渐变 */
+            background-image: radial-gradient(circle at 80% 20%, rgba(0,0,0,0.02) 0%, transparent 40%),
+                              radial-gradient(circle at 20% 80%, rgba(0,0,0,0.02) 0%, transparent 40%);
+            color: var(--ink-black);
             height: 100vh;
             display: flex;
             overflow: hidden;
+            letter-spacing: 1px;
         }
 
+        /* 左侧书卷留白 */
         .sidebar {
-            width: 260px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border);
+            width: 280px;
+            background: transparent;
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 24px;
+            padding: 40px 30px;
             flex-shrink: 0;
             z-index: 10;
-            box-shadow: 5px 0 30px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        /* 侧边栏右侧画一条细细的装饰线，模仿卷轴 */
+        .sidebar::after {
+            content: ''; position: absolute; right: 3px; top: 10%; bottom: 10%;
+            width: 1px; background: rgba(0,0,0,0.05);
         }
 
         .profile {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px dashed var(--border-color);
+            text-align: center;
         }
         
         .avatar {
-            width: 50px; height: 50px;
+            width: 64px; height: 64px;
             border-radius: 50%;
-            margin-right: 12px;
+            margin-bottom: 15px;
             border: 2px solid #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             background-image: url('m3.jpg'); /* 总头像 */
             background-size: cover;
             background-position: center;
+            transition: transform 0.5s;
         }
+        .avatar:hover { transform: rotate(5deg) scale(1.05); }
         
         .profile-info h3 { 
-            font-size: 16px; color: #333; font-weight: 600; 
-            background: -webkit-linear-gradient(45deg, #66a6ff, #ff9a9e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 20px; color: var(--ink-black); font-weight: normal; 
+            margin-bottom: 5px; letter-spacing: 2px;
         }
-        .profile-info p { font-size: 12px; color: var(--text-sub); letter-spacing: 1px; }
+        /* 印章风格的版本号 */
+        .seal-stamp {
+            display: inline-block; font-size: 10px; color: var(--cinnabar);
+            border: 1px solid var(--cinnabar); padding: 2px 4px; border-radius: 2px;
+            transform: rotate(-3deg); font-family: 'SimSun', serif; opacity: 0.8;
+            margin-top: 5px; letter-spacing: 0;
+        }
 
-        .nav-menu { list-style: none; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
+        .nav-menu { list-style: none; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
         
         .nav-btn {
             width: 100%; text-align: left; background: transparent; border: none;
-            padding: 12px 16px; color: #666; font-size: 14px; border-radius: 12px;
+            padding: 12px 20px; color: var(--ink-gray); font-size: 16px; 
             cursor: pointer; display: flex; align-items: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500;
+            transition: all 0.4s ease; font-family: inherit;
+            position: relative; border-radius: 4px;
         }
         
-        .nav-btn:hover { background-color: rgba(255,255,255,0.5); transform: translateX(3px); color: #333; }
-        .nav-btn.active { background: var(--primary-gradient); color: #ffffff; font-weight: bold; box-shadow: var(--active-shadow); }
-        .icon { margin-right: 12px; font-size: 16px; }
-
-        .music-player { margin-top: auto; padding: 15px; background: #fff; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8); }
-        .music-info { font-size: 12px; color: #666; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .music-controls { display: flex; gap: 8px; }
-        .control-btn { background: #f0f2f5; border: none; color: #555; padding: 6px 0; border-radius: 8px; cursor: pointer; font-size: 12px; flex: 1; transition: all 0.2s; }
-        .control-btn:hover { background: #e4e6eb; }
+        /* 悬浮时的水墨推移效果 */
+        .nav-btn:hover { color: var(--ink-black); transform: translateX(5px); }
         
-        .playing-indicator { display: none; width: 8px; height: 8px; background: #ff9a9e; border-radius: 50%; box-shadow: 0 0 10px #ff9a9e; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        /* 选中时的朱砂印记 */
+        .nav-btn.active { 
+            color: var(--cinnabar); font-weight: bold; background: var(--active-bg);
+        }
+        .nav-btn.active::before {
+            content: '引'; position: absolute; left: 0; font-size: 12px; opacity: 0.5;
+            font-family: 'SimSun', serif;
+        }
 
-        .main-content { flex-grow: 1; position: relative; background: #f7f9fc; }
+        /* 音乐播放器 -> 抚琴区 */
+        .music-player { 
+            margin-top: auto; padding: 20px 15px; 
+            border-top: 1px solid var(--border-color); 
+            text-align: center;
+        }
+        .music-info { 
+            font-size: 14px; color: var(--ink-gray); margin-bottom: 15px; 
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .music-controls { display: flex; gap: 10px; justify-content: center; }
+        .control-btn { 
+            background: transparent; border: 1px solid var(--border-color); 
+            color: var(--ink-black); padding: 5px 15px; border-radius: 20px; 
+            cursor: pointer; font-size: 12px; transition: all 0.3s; font-family: inherit;
+        }
+        .control-btn:hover { border-color: var(--ink-black); }
+        .control-btn.playing { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }
+        
+        .playing-indicator { 
+            display: none; width: 6px; height: 6px; background: var(--cinnabar); 
+            border-radius: 50%; animation: breathe 2s infinite; 
+        }
+        @keyframes breathe { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        .main-content { flex-grow: 1; position: relative; }
         #app-frame { width: 100%; height: 100%; border: none; display: block; }
 
+        /* 手机端适配 */
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; padding: 12px 16px; flex-direction: row; align-items: center; justify-content: space-between; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(30px); background: rgba(255,255,255,0.85); }
-            .profile { margin-bottom: 0; padding-bottom: 0; border: none; margin-right: 10px; }
-            .profile-info { display: none; }
-            .nav-menu { flex-direction: row; gap: 5px; overflow-x: auto; }
+            .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .sidebar::after { display: none; }
+            .profile { margin-bottom: 0; padding-bottom: 0; border: none; flex-direction: row; text-align: left; margin-right: 15px; }
+            .avatar { width: 40px; height: 40px; margin-bottom: 0; margin-right: 10px; }
+            .profile-info h3 { font-size: 16px; margin-bottom: 0; }
+            .seal-stamp { display: none; }
+            .nav-menu { flex-direction: row; gap: 10px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px; }
+            .nav-btn { padding: 5px 10px; font-size: 14px; }
+            .nav-btn.active::before { display: none; }
             .music-player { display: none; }
-            .nav-btn { padding: 8px 12px; white-space: nowrap; font-size: 13px; border-radius: 20px; }
-            .icon { margin-right: 5px; }
         }
     </style>
 </head>
@@ -110,38 +158,38 @@
             <div class="avatar"></div>
             <div class="profile-info">
                 <h3>家宝 & 宝宝</h3>
-                <p>Love OS v2.2</p>
-            </div>
+                <div class="seal-stamp">情长·癸丑</div>
+                </div>
         </div>
 
         <ul class="nav-menu">
             <li class="nav-item">
                 <button class="nav-btn active" onclick="switchTab(this, 'welcome.html')">
-                    <span class="icon">☁️</span> 我们的时空
+                    我们的时空
                 </button>
             </li>
             
             <li class="nav-item">
                 <button class="nav-btn" onclick="switchTab(this, 'love.html')">
-                    <span class="icon">🎁</span> 百日心盒
+                    百日心盒
                 </button>
             </li>
 
             <li class="nav-item">
                 <button class="nav-btn" onclick="switchTab(this, 'talk.html')">
-                    <span class="icon">💌</span> 我们的心里话
+                    尺素寸心 (心里话)
                 </button>
             </li>
             
             <li class="nav-item">
                 <button class="nav-btn" onclick="switchTab(this, 'impressions.html')">
-                    <span class="icon">🖼️</span> 印象集
+                    惊鸿照影 (印象集)
                 </button>
             </li>
 
             <li class="nav-item">
                 <button class="nav-btn" onclick="switchTab(this, 'travel.html')">
-                    <span class="icon">✈️</span> 我们的旅行
+                    山川万里 (旅行)
                 </button>
             </li>
         </ul>
@@ -152,8 +200,8 @@
                 <span class="playing-indicator" id="play-dot"></span>
             </div>
             <div class="music-controls">
-                <button class="control-btn" id="play-btn">▶ 播放</button>
-                <button class="control-btn" id="pause-btn">|| 暂停</button>
+                <button class="control-btn" id="play-btn">抚琴</button>
+                <button class="control-btn" id="pause-btn">驻音</button>
             </div>
         </div>
     </nav>
@@ -169,12 +217,12 @@
             
             const frame = document.getElementById('app-frame');
             frame.style.opacity = 0;
-            frame.style.transition = 'opacity 0.3s ease';
+            frame.style.transition = 'opacity 0.6s ease'; // 切换更缓慢优雅
             
             setTimeout(() => {
                 frame.src = url;
                 frame.onload = () => { frame.style.opacity = 1; };
-            }, 300);
+            }, 400);
         }
 
         const audio = new Audio('love_story.mp3'); 
@@ -186,13 +234,15 @@
         playBtn.addEventListener('click', () => {
             audio.play().then(() => {
                 playDot.style.display = 'inline-block';
-                playBtn.style.background = '#ff9a9e'; playBtn.style.color = 'white';
+                playBtn.classList.add('playing');
+                pauseBtn.classList.remove('playing');
             }).catch(e => console.log("需交互"));
         });
 
         pauseBtn.addEventListener('click', () => {
             audio.pause(); playDot.style.display = 'none';
-            playBtn.style.background = '#f0f2f5'; playBtn.style.color = '#555';
+            pauseBtn.classList.add('playing');
+            playBtn.classList.remove('playing');
         });
     </script>
 </body>
