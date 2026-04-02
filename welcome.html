@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Space - 国风版</title>
+    <title>Our Space - 聘书版</title>
     <style>
-        /* === 继承主页的国风配色 === */
+        /* === 聘书配色系统 === */
         :root {
             --ink-black: #2b2b2b; /* 浓墨 */
             --ink-gray: #707070; /* 淡墨 */
-            --cinnabar: #a7322e; /* 朱砂红 */
+            --cinnabar: #a7322e; /* 朱砂红 - 增加使用比例 */
             --border-color: #d4ccb8; /* 古朴边框 */
         }
 
@@ -22,131 +22,148 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            /* 字体调用宋体/楷体 */
             font-family: 'KaiTi', 'STKaiti', 'Noto Serif SC', 'Songti SC', serif;
-            background: transparent; /* 透出 index 的宣纸底色 */
+            background: transparent; 
             color: var(--ink-black);
             overflow: hidden;
             padding: 20px;
         }
 
-        /* 主卡片：改为古朴的线框画卷风格 */
+        /* 主卡片：聘书外框 */
         .main-card {
-            background: rgba(255, 255, 255, 0.4);
-            padding: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 60px 50px;
             border: 1px solid var(--border-color);
             position: relative;
             text-align: center;
             width: 100%;
             max-width: 800px;
             animation: fadeIn 1.5s ease-out;
+            box-shadow: 0 10px 30px rgba(167, 50, 46, 0.05); /* 淡淡的红色阴影 */
         }
         
-        /* 画卷的四角装饰点 */
-        .main-card::before, .main-card::after {
-            content: ''; position: absolute; width: 6px; height: 6px;
-            background: var(--cinnabar); border-radius: 50%; opacity: 0.6;
-        }
-        .main-card::before { top: 10px; left: 10px; box-shadow: 668px 0 var(--cinnabar); }
-        .main-card::after { bottom: 10px; left: 10px; box-shadow: 668px 0 var(--cinnabar); }
+        /* 聘书四角朱砂护角 */
+        .corner { position: absolute; width: 40px; height: 40px; border: 3px solid var(--cinnabar); opacity: 0.8; }
+        .corner-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .corner-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
 
-        /* 顶部名字区域 */
+        /* 顶部区域 */
         .header-section {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 40px;
+            gap: 20px;
             margin-bottom: 50px;
         }
 
-        .person { text-align: center; }
+        .person { text-align: center; width: 120px; }
         
-        /* 朱砂印章风格的星座图标 */
+        /* 红色印章 */
         .zodiac-stamp {
-            width: 50px; height: 50px;
+            width: 55px; height: 55px;
             border: 2px solid var(--cinnabar);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex; justify-content: center; align-items: center;
             margin: 0 auto 15px auto;
-            font-size: 20px;
+            font-size: 24px;
             color: var(--cinnabar);
             font-weight: bold;
-            transform: rotate(-3deg);
-            opacity: 0.9;
+            transform: rotate(-4deg);
+            background: rgba(167, 50, 46, 0.05); /* 印章底色微红 */
             transition: transform 0.4s;
         }
         .female .zodiac-stamp { transform: rotate(4deg); }
         .person:hover .zodiac-stamp { transform: scale(1.1) rotate(0); }
 
-        .name { font-size: 22px; margin-bottom: 5px; letter-spacing: 4px; }
+        .name { font-size: 22px; margin-bottom: 5px; letter-spacing: 4px; font-weight: bold; color: var(--cinnabar); }
         .zodiac-name { font-size: 12px; color: var(--ink-gray); letter-spacing: 2px; }
 
-        /* 中间结缘 */
+        /* 中间红线牵系印章 */
         .heart-divider {
-            font-size: 18px; color: var(--cinnabar); 
-            display: flex; flex-direction: column; align-items: center;
-            gap: 5px; opacity: 0.8;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; width: 200px;
         }
-        .heart-divider span { font-size: 12px; color: var(--ink-gray); writing-mode: vertical-lr; letter-spacing: 2px; }
+        .red-line { flex-grow: 1; height: 1px; background: var(--cinnabar); opacity: 0.5; }
+        .seal-text {
+            background: var(--cinnabar); color: #fff; padding: 6px 10px;
+            font-size: 16px; font-family: 'SimSun', serif; letter-spacing: 2px;
+            border-radius: 3px; box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+        }
 
         /* 计时器区域 */
         .timer-container {
             display: flex;
             gap: 40px;
             justify-content: center;
-            border-top: 1px dashed var(--border-color);
-            border-bottom: 1px dashed var(--border-color);
-            padding: 30px 0;
             margin-top: 20px;
         }
 
-        .timer-box { flex: 1; transition: transform 0.3s; }
-        .timer-box:hover { transform: translateY(-3px); }
+        /* 计时器红框 */
+        .timer-box { 
+            flex: 1; 
+            transition: transform 0.3s; 
+            border: 1px solid rgba(167, 50, 46, 0.2); /* 淡淡的红框 */
+            background: linear-gradient(to bottom, rgba(167, 50, 46, 0.06) 0%, transparent 100%); /* 顶部微红晕染 */
+            padding: 30px 20px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .timer-box:hover { transform: translateY(-3px); border-color: rgba(167, 50, 46, 0.4); }
+        
+        /* 框顶红线压阵 */
+        .timer-box::after {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 40%; height: 2px; background: var(--cinnabar);
+        }
 
-        .timer-label { font-size: 18px; color: var(--ink-black); margin-bottom: 10px; letter-spacing: 2px; }
-        .timer-date { font-size: 13px; color: var(--ink-gray); margin-bottom: 20px; font-family: sans-serif; letter-spacing: 1px; }
+        .timer-label { font-size: 18px; color: var(--ink-black); margin-bottom: 10px; letter-spacing: 2px; font-weight: bold; }
+        .timer-date { font-size: 13px; color: var(--cinnabar); margin-bottom: 20px; opacity: 0.8; letter-spacing: 1px; }
         
         .timer-number {
-            font-size: 46px; font-weight: normal;
-            font-family: 'Times New Roman', serif; /* 衬线数字更有韵味 */
+            font-size: 52px; font-weight: normal;
+            font-family: 'Times New Roman', serif;
             color: var(--cinnabar);
+            text-shadow: 1px 1px 2px rgba(167, 50, 46, 0.2); /* 数字增加一点立体感 */
         }
         .timer-unit { font-size: 14px; color: var(--ink-gray); margin-left: 5px; }
-
-        /* 底部标语 */
-        .footer-quote {
-            margin-top: 40px;
-            font-size: 15px;
-            color: var(--ink-gray);
-            letter-spacing: 3px;
-        }
 
         @keyframes fadeIn { from { opacity: 0; filter: blur(5px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 
         @media (max-width: 768px) {
             .timer-container { flex-direction: column; gap: 30px; }
-            .header-section { gap: 20px; }
-            .main-card { padding: 40px 20px; border: none; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
-            .main-card::before, .main-card::after { display: none; }
+            .header-section { gap: 10px; flex-direction: row; }
+            .heart-divider { width: 80px; }
+            .main-card { padding: 40px 20px; border: none; }
+            .corner { display: none; } /* 手机端隐藏护角防错位 */
         }
     </style>
 </head>
 <body>
 
     <div class="main-card">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
         <div class="header-section">
             <div class="person male">
-                <div class="zodiac-stamp">双子</div> <div class="name">张亦宸</div>
+                <div class="zodiac-stamp">双子</div>
+                <div class="name">张亦宸</div>
                 <div class="zodiac-name">GEMINI</div>
             </div>
 
             <div class="heart-divider">
-                <span>结缘</span>
-                <div style="font-size: 8px;">●</div>
+                <div class="red-line"></div>
+                <div class="seal-text">良缘</div>
+                <div class="red-line"></div>
             </div>
 
             <div class="person female">
-                <div class="zodiac-stamp">巨蟹</div> <div class="name">杨沁宜</div>
+                <div class="zodiac-stamp">巨蟹</div>
+                <div class="name">杨沁宜</div>
                 <div class="zodiac-name">CANCER</div>
             </div>
         </div>
@@ -169,10 +186,6 @@
                     <span class="timer-unit">日</span>
                 </div>
             </div>
-        </div>
-
-        <div class="footer-quote">
-            风水相逢，宇宙温柔
         </div>
     </div>
 
